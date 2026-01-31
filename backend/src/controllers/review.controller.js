@@ -83,7 +83,7 @@ const getReviewsByVendor = asyncHandler(async (req, res, next) => {
 
   // Calculate average ratings
   const stats = await Review.aggregate([
-    { $match: { vendor: mongoose.Types.ObjectId(req.params.vendorId) } },
+    { $match: { vendor: new mongoose.Types.ObjectId(req.params.vendorId) } },
     {
       $group: {
         _id: null,
@@ -126,7 +126,7 @@ const getReviewsByDriver = asyncHandler(async (req, res, next) => {
 
   // Calculate average ratings
   const stats = await Review.aggregate([
-    { $match: { driver: mongoose.Types.ObjectId(req.params.driverId) } },
+    { $match: { driver: new mongoose.Types.ObjectId(req.params.driverId) } },
     {
       $group: {
         _id: null,
