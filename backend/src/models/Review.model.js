@@ -25,13 +25,18 @@ const reviewSchema = new mongoose.Schema({
     ref: 'Driver',
     index: true
   },
-  vendorRating: {
+  foodRating: {
     type: Number,
     required: true,
     min: 1,
     max: 5
   },
-  driverRating: {
+  deliveryRating: {
+    type: Number,
+    min: 1,
+    max: 5
+  },
+  rating: {
     type: Number,
     min: 1,
     max: 5
@@ -49,6 +54,17 @@ const reviewSchema = new mongoose.Schema({
 reviewSchema.index({ vendor: 1, createdAt: -1 });
 reviewSchema.index({ driver: 1, createdAt: -1 });
 
+// Calculate overall rating before save
+reviewSchema.pre('save', function(next) {
+  // Calculate average of foodRating and deliveryRating (if deliveryRating exists)
+  if (this.deliveryRating) {
+    this.rating = (this.foodRating + this.deliveryRating) / 2;
+  } else {
+    this.rating = this.foodRating;
+  }
+  next();
+});
+
 // Update vendor rating after review
 reviewSchema.post('save', async function() {
   const Review = this.constructor;
@@ -56,7 +72,7 @@ reviewSchema.post('save', async function() {
   
   const stats = await Review.aggregate([
     { $match: { vendor: this.vendor } },
-    { $group: { _id: null, avgRating: { $avg: '$vendorRating' } } }
+    { $group: { _id: null, avgRating: { $avg: '$rating' } } }
   ]);
   
   if (stats.length > 0) {
@@ -66,11 +82,11 @@ reviewSchema.post('save', async function() {
   }
   
   // Update driver rating if exists
-  if (this.driver && this.driverRating) {
+  if (this.driver && this.deliveryRating) {
     const Driver = mongoose.model('Driver');
     const driverStats = await Review.aggregate([
-      { $match: { driver: this.driver, driverRating: { $exists: true } } },
-      { $group: { _id: null, avgRating: { $avg: '$driverRating' } } }
+      { $match: { driver: this.driver, deliveryRating: { $exists: true } } },
+      { $group: { _id: null, avgRating: { $avg: '$deliveryRating' } } }
     ]);
     
     if (driverStats.length > 0) {

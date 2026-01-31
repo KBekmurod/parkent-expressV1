@@ -68,6 +68,8 @@ app.use('/api/v1/vendors', require('./src/routes/vendor.routes'));
 app.use('/api/v1/drivers', require('./src/routes/driver.routes'));
 app.use('/api/v1/products', require('./src/routes/product.routes'));
 app.use('/api/v1/orders', require('./src/routes/order.routes'));
+app.use('/api/v1/reviews', require('./src/routes/review.routes'));
+app.use('/api/v1/categories', require('./src/routes/category.routes'));
 // app.use('/api/v1/admin', require('./src/routes/admin.routes'));
 
 // 404 handler
