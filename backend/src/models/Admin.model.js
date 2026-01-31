@@ -5,14 +5,14 @@ const adminSchema = new mongoose.Schema({
   username: {
     type: String,
     required: true,
-    unique: true,
+    unique: true, // Creates index automatically
     trim: true,
     lowercase: true
   },
   email: {
     type: String,
     required: true,
-    unique: true,
+    unique: true, // Creates index automatically
     trim: true,
     lowercase: true,
     match: /^\S+@\S+\.\S+$/
@@ -69,9 +69,5 @@ adminSchema.methods.toJSON = function() {
   delete obj.password;
   return obj;
 };
-
-// Indexes
-adminSchema.index({ email: 1 });
-adminSchema.index({ username: 1 });
 
 module.exports = mongoose.model('Admin', adminSchema);
