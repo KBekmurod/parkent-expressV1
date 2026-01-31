@@ -6,6 +6,7 @@ const Driver = require('../models/Driver.model');
 const { asyncHandler } = require('../middleware/error.middleware');
 const { AppError } = require('../middleware/error.middleware');
 const logger = require('../utils/logger');
+const { PLATFORM_CONFIG, ORDER_STATUS } = require('../config/constants');
 
 /**
  * Generate unique order number
@@ -67,9 +68,7 @@ const createOrder = asyncHandler(async (req, res, next) => {
       return next(new AppError(`Product ${product.name.uz} is not available`, 400));
     }
 
-    const itemPrice = product.discount > 0 
-      ? Math.round(product.price * (1 - product.discount / 100))
-      : product.price;
+    const itemPrice = product.getDiscountedPrice();
 
     orderItems.push({
       product: product._id,
@@ -81,7 +80,7 @@ const createOrder = asyncHandler(async (req, res, next) => {
   }
 
   // Calculate delivery fee (simple flat rate for now)
-  const deliveryFee = 5000; // 5000 sum
+  const deliveryFee = PLATFORM_CONFIG.DEFAULT_DELIVERY_FEE;
 
   // Calculate total
   const total = subtotal + deliveryFee;
@@ -288,7 +287,7 @@ const updateOrderStatus = asyncHandler(async (req, res, next) => {
   await order.save();
 
   // Update vendor total orders on delivery
-  if (status === 'delivered') {
+  if (status === ORDER_STATUS.DELIVERED) {
     const vendor = await Vendor.findById(order.vendor);
     vendor.totalOrders += 1;
     await vendor.save();
@@ -334,7 +333,7 @@ const assignDriver = asyncHandler(async (req, res, next) => {
     return next(new AppError('Order not found', 404));
   }
 
-  if (order.status !== 'ready') {
+  if (order.status !== ORDER_STATUS.READY) {
     return next(new AppError('Order must be in ready status to assign driver', 400));
   }
 
@@ -349,13 +348,13 @@ const assignDriver = asyncHandler(async (req, res, next) => {
     return next(new AppError('Driver is not available', 400));
   }
 
-  if (driver.currentOrders.length >= 3) {
+  if (driver.currentOrders.length >= PLATFORM_CONFIG.MAX_DRIVER_ORDERS) {
     return next(new AppError('Driver has maximum orders', 400));
   }
 
   // Assign driver
   order.driver = driverId;
-  order.status = 'assigned';
+  order.status = ORDER_STATUS.ASSIGNED;
   await order.save();
 
   // Add to driver's current orders
@@ -390,11 +389,11 @@ const cancelOrder = asyncHandler(async (req, res, next) => {
   }
 
   // Can only cancel if not delivered
-  if (['delivered', 'cancelled'].includes(order.status)) {
+  if ([ORDER_STATUS.DELIVERED, ORDER_STATUS.CANCELLED].includes(order.status)) {
     return next(new AppError('Cannot cancel this order', 400));
   }
 
-  order.status = 'cancelled';
+  order.status = ORDER_STATUS.CANCELLED;
   await order.save();
 
   // Remove from driver's current orders if assigned
