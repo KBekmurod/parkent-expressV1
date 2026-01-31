@@ -70,8 +70,4 @@ adminSchema.methods.toJSON = function() {
   return obj;
 };
 
-// Indexes
-adminSchema.index({ email: 1 });
-adminSchema.index({ username: 1 });
-
 module.exports = mongoose.model('Admin', adminSchema);
