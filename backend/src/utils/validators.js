@@ -202,6 +202,30 @@ const adminSchemas = {
   })
 };
 
+/**
+ * Transaction validation schemas
+ */
+const transactionSchemas = {
+  create: Joi.object({
+    order: Joi.string().pattern(/^[0-9a-fA-F]{24}$/),
+    from: Joi.string().required(),
+    fromModel: Joi.string().valid('User', 'Vendor', 'Driver', 'Platform').required(),
+    to: Joi.string().required(),
+    toModel: Joi.string().valid('User', 'Vendor', 'Driver', 'Platform').required(),
+    amount: Joi.number().positive().required(),
+    type: Joi.string().valid('payment', 'refund', 'payout', 'commission').required(),
+    paymentMethod: Joi.string().valid('cash', 'card', 'payme', 'click').required(),
+    description: Joi.string().max(500).trim()
+  }),
+  payout: Joi.object({
+    from: Joi.string().pattern(/^[0-9a-fA-F]{24}$/).required(),
+    fromModel: Joi.string().valid('Vendor', 'Driver').required(),
+    amount: Joi.number().positive().required(),
+    paymentMethod: Joi.string().valid('cash', 'card', 'bank_transfer').required(),
+    description: Joi.string().max(500).trim()
+  })
+};
+
 module.exports = {
   userSchemas,
   vendorSchemas,
@@ -210,5 +234,6 @@ module.exports = {
   orderSchemas,
   reviewSchemas,
   adminSchemas,
-  categorySchemas
+  categorySchemas,
+  transactionSchemas
 };
