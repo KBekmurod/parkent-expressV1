@@ -108,7 +108,13 @@ const getOrderAnalytics = asyncHandler(async (req, res, next) => {
   if (period === 'daily') {
     groupFormat = { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } };
   } else if (period === 'weekly') {
-    groupFormat = { $week: '$createdAt' };
+    groupFormat = { 
+      $concat: [
+        { $toString: { $isoWeekYear: '$createdAt' } },
+        '-W',
+        { $toString: { $isoWeek: '$createdAt' } }
+      ]
+    };
   } else if (period === 'monthly') {
     groupFormat = { $dateToString: { format: '%Y-%m', date: '$createdAt' } };
   } else {

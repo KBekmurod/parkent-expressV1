@@ -78,10 +78,9 @@ const updateTransactionStatus = asyncHandler(async (req, res, next) => {
 
   // Update balances on completion
   if (status === 'completed') {
-    // Deduct from sender
-    if (transaction.fromModel === 'User') {
-      // User payments usually done upfront, no balance to deduct
-    } else if (transaction.fromModel === 'Vendor') {
+    // Deduct from sender (if applicable)
+    // Note: User payments are typically done upfront via payment gateway, so no balance to deduct
+    if (transaction.fromModel === 'Vendor') {
       const vendor = await Vendor.findById(transaction.from);
       if (vendor) {
         if (vendor.balance < transaction.amount) {

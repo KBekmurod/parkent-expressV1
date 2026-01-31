@@ -73,17 +73,23 @@ transactionSchema.pre('save', async function(next) {
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
         const date = new Date();
-        const prefix = `TXN${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, '0')}${String(date.getDate()).padStart(2, '0')}`;
+        const prefix = `TXN${date.getUTCFullYear()}${String(date.getUTCMonth() + 1).padStart(2, '0')}${String(date.getUTCDate()).padStart(2, '0')}`;
         
-        // Find the last transaction for today
+        // Use date range query for better performance and correctness
+        const startOfDay = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
+        const endOfDay = new Date(startOfDay);
+        endOfDay.setUTCDate(endOfDay.getUTCDate() + 1);
+        
         const lastTransaction = await this.constructor.findOne({ 
-          transactionId: { $regex: `^${prefix}` } 
+          createdAt: { $gte: startOfDay, $lt: endOfDay }
         }).sort({ transactionId: -1 }).select('transactionId');
         
         let sequence = 1;
-        if (lastTransaction) {
+        if (lastTransaction && lastTransaction.transactionId) {
           const lastSequence = parseInt(lastTransaction.transactionId.slice(-6));
-          sequence = lastSequence + 1;
+          if (!isNaN(lastSequence)) {
+            sequence = lastSequence + 1;
+          }
         }
         
         this.transactionId = `${prefix}${String(sequence).padStart(6, '0')}`;
