@@ -18,13 +18,20 @@ const compressImage = async (filePath, options = {}) => {
 
     const outputPath = filePath.replace(path.extname(filePath), `.${format}`);
 
-    await sharp(filePath)
-      .resize(width, null, {
-        fit: 'inside',
-        withoutEnlargement: true
-      })
-      .jpeg({ quality, progressive: true })
-      .toFile(outputPath);
+    const sharpInstance = sharp(filePath).resize(width, null, {
+      fit: 'inside',
+      withoutEnlargement: true
+    });
+
+    // Apply format-specific encoding
+    if (format === 'png') {
+      await sharpInstance.png({ quality }).toFile(outputPath);
+    } else if (format === 'webp') {
+      await sharpInstance.webp({ quality }).toFile(outputPath);
+    } else {
+      // Default to JPEG
+      await sharpInstance.jpeg({ quality, progressive: true }).toFile(outputPath);
+    }
 
     // If output format is different, delete original
     if (outputPath !== filePath) {
@@ -41,20 +48,30 @@ const compressImage = async (filePath, options = {}) => {
 /**
  * Compress image for thumbnail
  * @param {string} filePath - Path to image file
+ * @param {object} options - Thumbnail options
  */
-const createThumbnail = async (filePath) => {
+const createThumbnail = async (filePath, options = {}) => {
   try {
+    const { quality = 70, size = 300 } = options;
+    const ext = path.extname(filePath).toLowerCase();
     const thumbnailPath = filePath.replace(
       path.extname(filePath),
       `-thumb${path.extname(filePath)}`
     );
 
-    await sharp(filePath)
-      .resize(300, 300, {
-        fit: 'cover'
-      })
-      .jpeg({ quality: 70 })
-      .toFile(thumbnailPath);
+    const sharpInstance = sharp(filePath).resize(size, size, {
+      fit: 'cover'
+    });
+
+    // Use the same format as the input file
+    if (ext === '.png') {
+      await sharpInstance.png({ quality }).toFile(thumbnailPath);
+    } else if (ext === '.webp') {
+      await sharpInstance.webp({ quality }).toFile(thumbnailPath);
+    } else {
+      // Default to JPEG for .jpg and .jpeg
+      await sharpInstance.jpeg({ quality }).toFile(thumbnailPath);
+    }
 
     return thumbnailPath;
   } catch (error) {
@@ -118,14 +135,12 @@ const getFileSize = async (filePath) => {
 };
 
 /**
- * Validate file type
+ * Validate file type by extension
  * @param {string} filePath - Path to file
- * @param {Array} allowedTypes - Array of allowed mime types
+ * @param {Array} allowedExts - Array of allowed extensions (e.g., ['.jpg', '.jpeg', '.png', '.webp'])
  */
-const validateFileType = (filePath, allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']) => {
+const validateFileType = (filePath, allowedExts = ['.jpg', '.jpeg', '.png', '.webp']) => {
   const ext = path.extname(filePath).toLowerCase();
-  const allowedExts = allowedTypes.map(type => `.${type.split('/')[1]}`);
-  
   return allowedExts.includes(ext);
 };
 

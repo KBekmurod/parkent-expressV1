@@ -19,12 +19,15 @@ const storage = multer.diskStorage({
     let uploadPath = 'uploads/';
     
     // Determine upload path based on fieldname
-    if (file.fieldname === 'menu' || file.fieldname === 'photo') {
+    if (file.fieldname === 'menu' || file.fieldname === 'photo' || file.fieldname === 'photos') {
       uploadPath += 'menus/';
     } else if (file.fieldname === 'logo') {
       uploadPath += 'logos/';
     } else if (file.fieldname === 'document' || file.fieldname === 'documentPhoto') {
       uploadPath += 'documents/';
+    } else {
+      // Default to menus directory for unspecified fieldnames
+      uploadPath += 'menus/';
     }
     
     cb(null, uploadPath);
