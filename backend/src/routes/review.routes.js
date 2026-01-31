@@ -13,6 +13,9 @@ const { protect, adminAuth } = require('../middleware/auth.middleware');
 const { validate, validateObjectId } = require('../middleware/validation.middleware');
 const { reviewSchemas } = require('../utils/validators');
 
+// Admin routes
+router.get('/', protect, adminAuth, getAllReviews);
+
 // Public routes (Telegram bot)
 router.post('/', validate(reviewSchemas.create), createReview);
 router.get('/vendor/:vendorId', validateObjectId('vendorId'), getReviewsByVendor);
@@ -20,8 +23,7 @@ router.get('/driver/:driverId', validateObjectId('driverId'), getReviewsByDriver
 router.get('/customer/:customerId', validateObjectId('customerId'), getCustomerReviews);
 router.get('/:id', validateObjectId('id'), getReviewById);
 
-// Admin routes
-router.get('/', protect, adminAuth, getAllReviews);
+// Admin delete route
 router.delete('/:id', protect, adminAuth, validateObjectId('id'), deleteReview);
 
 module.exports = router;
