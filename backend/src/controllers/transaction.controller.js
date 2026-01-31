@@ -28,9 +28,9 @@ const createTransaction = asyncHandler(async (req, res, next) => {
   const transaction = await Transaction.create({
     order,
     from,
-    fromModel: req.body.fromModel || 'User',
-    to,
-    toModel: req.body.toModel || 'Vendor',
+    fromModel: req.body.fromModel,
+    to: req.body.toModel === 'Platform' ? null : to,
+    toModel: req.body.toModel,
     amount,
     type,
     paymentMethod,
@@ -84,25 +84,31 @@ const updateTransactionStatus = asyncHandler(async (req, res, next) => {
     } else if (transaction.fromModel === 'Vendor') {
       const vendor = await Vendor.findById(transaction.from);
       if (vendor) {
+        if (vendor.balance < transaction.amount) {
+          return next(new AppError('Insufficient balance for transaction', 400));
+        }
         vendor.balance -= transaction.amount;
         await vendor.save();
       }
     } else if (transaction.fromModel === 'Driver') {
       const driver = await Driver.findById(transaction.from);
       if (driver) {
+        if (driver.balance < transaction.amount) {
+          return next(new AppError('Insufficient balance for transaction', 400));
+        }
         driver.balance -= transaction.amount;
         await driver.save();
       }
     }
 
     // Add to receiver
-    if (transaction.toModel === 'Vendor') {
+    if (transaction.toModel === 'Vendor' && transaction.to) {
       const vendor = await Vendor.findById(transaction.to);
       if (vendor) {
         vendor.balance += transaction.amount;
         await vendor.save();
       }
-    } else if (transaction.toModel === 'Driver') {
+    } else if (transaction.toModel === 'Driver' && transaction.to) {
       const driver = await Driver.findById(transaction.to);
       if (driver) {
         driver.balance += transaction.amount;
@@ -342,7 +348,7 @@ const requestPayout = asyncHandler(async (req, res, next) => {
   const transaction = await Transaction.create({
     from,
     fromModel,
-    to: 'Platform',
+    to: null,
     toModel: 'Platform',
     amount,
     type: 'payout',

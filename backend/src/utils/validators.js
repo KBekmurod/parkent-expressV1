@@ -210,12 +210,18 @@ const transactionSchemas = {
     order: Joi.string().pattern(/^[0-9a-fA-F]{24}$/),
     from: Joi.string().required(),
     fromModel: Joi.string().valid('User', 'Vendor', 'Driver', 'Platform').required(),
-    to: Joi.string().required(),
+    to: Joi.string().allow(null),
     toModel: Joi.string().valid('User', 'Vendor', 'Driver', 'Platform').required(),
     amount: Joi.number().positive().required(),
     type: Joi.string().valid('payment', 'refund', 'payout', 'commission').required(),
     paymentMethod: Joi.string().valid('cash', 'card', 'payme', 'click').required(),
     description: Joi.string().max(500).trim()
+  }).custom((value, helpers) => {
+    // If toModel is not Platform, to field is required
+    if (value.toModel !== 'Platform' && !value.to) {
+      return helpers.error('any.invalid', { message: '"to" is required when "toModel" is not "Platform"' });
+    }
+    return value;
   }),
   payout: Joi.object({
     from: Joi.string().pattern(/^[0-9a-fA-F]{24}$/).required(),
