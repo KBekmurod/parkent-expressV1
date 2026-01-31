@@ -1,5 +1,6 @@
 require('dotenv').config();
 const express = require('express');
+const http = require('http');
 const cors = require('cors');
 const helmet = require('helmet');
 const mongoSanitize = require('express-mongo-sanitize');
@@ -8,11 +9,19 @@ const connectDB = require('./src/config/database');
 const logger = require('./src/utils/logger');
 const { errorHandler, notFound } = require('./src/middleware/error.middleware');
 const { apiLimiter } = require('./src/middleware/rateLimit.middleware');
+const { initSocket } = require('./src/socket');
 
 const app = express();
+const server = http.createServer(app);
 
 // Connect to MongoDB
 connectDB();
+
+// Initialize Socket.io
+const io = initSocket(server);
+
+// Make io accessible in controllers
+app.set('io', io);
 
 // Security Middleware
 app.use(helmet()); // HTTP headers security
@@ -47,6 +56,7 @@ app.get('/health', (req, res) => {
     success: true,
     status: 'OK', 
     message: 'Parkent Express Backend is running',
+    socket: io ? 'connected' : 'disconnected',
     timestamp: new Date().toISOString()
   });
 });
@@ -57,6 +67,7 @@ app.get('/', (req, res) => {
     success: true,
     message: 'Parkent Express API',
     version: '1.0.0',
+    socket: 'Socket.io enabled',
     docs: '/api/docs'
   });
 });
@@ -82,9 +93,11 @@ app.use(errorHandler);
 
 // Start server
 const PORT = process.env.PORT || 5000;
-const server = app.listen(PORT, () => {
+server.listen(PORT, () => {
   logger.info(`🚀 Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
+  logger.info(`🔌 Socket.io ready for connections`);
   console.log(`🚀 Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
+  console.log(`🔌 Socket.io ready for connections`);
 });
 
 // Handle unhandled promise rejections
@@ -105,7 +118,8 @@ process.on('uncaughtException', (err) => {
 process.on('SIGTERM', () => {
   logger.info('SIGTERM received. Shutting down gracefully...');
   server.close(() => {
-    logger.info('Process terminated');
+    logger.info('Server closed');
+    process.exit(0);
   });
 });
 
