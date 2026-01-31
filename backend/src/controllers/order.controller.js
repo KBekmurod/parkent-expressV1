@@ -18,7 +18,7 @@ const generateOrderNumber = async () => {
   // Find the last order number for today
   const lastOrder = await Order.findOne({ 
     orderNumber: { $regex: `^${prefix}` } 
-  }).sort({ orderNumber: -1 });
+  }).sort({ orderNumber: -1 }).select('orderNumber');
   
   let sequence = 1;
   if (lastOrder) {
@@ -27,6 +27,27 @@ const generateOrderNumber = async () => {
   }
   
   return `${prefix}${String(sequence).padStart(4, '0')}`;
+};
+
+/**
+ * Create order with retry logic for order number generation
+ */
+const createOrderWithRetry = async (orderData, maxRetries = 3) => {
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      const orderNumber = await generateOrderNumber();
+      orderData.orderNumber = orderNumber;
+      return await Order.create(orderData);
+    } catch (error) {
+      // If duplicate key error on orderNumber, retry
+      if (error.code === 11000 && error.keyPattern?.orderNumber && attempt < maxRetries) {
+        logger.warn(`Order number collision, retrying... (attempt ${attempt}/${maxRetries})`);
+        continue;
+      }
+      throw error;
+    }
+  }
+  throw new Error('Failed to generate unique order number after multiple attempts');
 };
 
 /**
@@ -85,12 +106,8 @@ const createOrder = asyncHandler(async (req, res, next) => {
   // Calculate total
   const total = subtotal + deliveryFee;
 
-  // Generate order number
-  const orderNumber = await generateOrderNumber();
-
-  // Create order
-  const order = await Order.create({
-    orderNumber,
+  // Create order with retry logic to handle order number collisions
+  const order = await createOrderWithRetry({
     customer,
     vendor,
     items: orderItems,

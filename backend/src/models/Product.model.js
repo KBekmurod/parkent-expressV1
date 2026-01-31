@@ -77,10 +77,7 @@ productSchema.virtual('finalPrice').get(function() {
 
 // Instance method to get discounted price
 productSchema.methods.getDiscountedPrice = function() {
-  if (this.discount > 0) {
-    return Math.round(this.price * (1 - this.discount / 100));
-  }
-  return this.price;
+  return this.finalPrice;
 };
 
 module.exports = mongoose.model('Product', productSchema);
