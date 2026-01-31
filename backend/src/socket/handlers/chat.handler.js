@@ -1,9 +1,7 @@
-const Message = require('../../models/Message.model');
 const Order = require('../../models/Order.model');
 const logger = require('../../utils/logger');
 
-// Note: Need to create Message model first
-// This is a placeholder - you'll need to create the model
+// Note: Message model not yet implemented - messages are handled in memory for now
 
 module.exports = (io, socket) => {
   /**
