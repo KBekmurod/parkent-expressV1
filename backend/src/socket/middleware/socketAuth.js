@@ -23,38 +23,29 @@ const socketAuth = async (socket, next) => {
       return next(new Error('Invalid token'));
     }
 
-    // Try to find user in different collections
+    // Try to find user in different collections concurrently
+    const [admin, customer, vendor, driver] = await Promise.all([
+      Admin.findById(decoded.id),
+      User.findById(decoded.id),
+      Vendor.findById(decoded.id),
+      Driver.findById(decoded.id)
+    ]);
+
     let user;
     let userType;
 
-    // Check Admin
-    user = await Admin.findById(decoded.id);
-    if (user) {
+    if (admin) {
+      user = admin;
       userType = 'admin';
-    }
-
-    // Check User (Customer)
-    if (!user) {
-      user = await User.findById(decoded.id);
-      if (user) {
-        userType = 'customer';
-      }
-    }
-
-    // Check Vendor
-    if (!user) {
-      user = await Vendor.findById(decoded.id);
-      if (user) {
-        userType = 'vendor';
-      }
-    }
-
-    // Check Driver
-    if (!user) {
-      user = await Driver.findById(decoded.id);
-      if (user) {
-        userType = 'driver';
-      }
+    } else if (customer) {
+      user = customer;
+      userType = 'customer';
+    } else if (vendor) {
+      user = vendor;
+      userType = 'vendor';
+    } else if (driver) {
+      user = driver;
+      userType = 'driver';
     }
 
     if (!user) {

@@ -11,9 +11,10 @@ module.exports = (io, socket) => {
 
   /**
    * Get unread notification count
+   * TODO: Implement actual database query when notification model is ready
    */
   socket.on('notification:count', () => {
-    // In real app, fetch from database
+    // Placeholder - returns 0 until notification system is implemented
     socket.emit('notification:count', { count: 0 });
   });
 

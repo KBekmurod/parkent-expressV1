@@ -1,7 +1,10 @@
 const Order = require('../../models/Order.model');
 const logger = require('../../utils/logger');
 
-// Note: Message model not yet implemented - messages are handled in memory for now
+// NOTE: Message model not yet implemented.
+// Messages are currently ephemeral (broadcast only, not persisted).
+// They will be lost when clients disconnect. For persistent chat,
+// implement a Message model and save messages to database.
 
 module.exports = (io, socket) => {
   /**
