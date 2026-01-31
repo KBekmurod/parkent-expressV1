@@ -16,6 +16,9 @@ const { validate, validateObjectId } = require('../middleware/validation.middlew
 const { orderSchemas } = require('../utils/validators');
 const { orderLimiter } = require('../middleware/rateLimit.middleware');
 
+// Admin routes (must come before generic routes)
+router.get('/', protect, adminAuth, getAllOrders);
+
 // Public routes (Telegram bot)
 router.post('/', orderLimiter, validate(orderSchemas.create), createOrder);
 router.get('/customer/:customerId', validateObjectId('customerId'), getOrdersByCustomer);
@@ -24,11 +27,10 @@ router.get('/driver/:driverId', validateObjectId('driverId'), getOrdersByDriver)
 router.get('/:id', validateObjectId('id'), getOrderById);
 
 // Vendor/Driver routes
-router.put('/:id/status', validateObjectId('id'), validate(orderSchemas.updateStatus), updateOrderStatus);
-router.put('/:id/cancel', validateObjectId('id'), cancelOrder);
+router.put('/:id/status', protect, validateObjectId('id'), validate(orderSchemas.updateStatus), updateOrderStatus);
+router.put('/:id/cancel', protect, validateObjectId('id'), cancelOrder);
 
 // Admin routes
-router.get('/', protect, adminAuth, getAllOrders);
-router.put('/:id/assign-driver', validateObjectId('id'), assignDriver);
+router.put('/:id/assign-driver', protect, adminAuth, validateObjectId('id'), assignDriver);
 
 module.exports = router;
