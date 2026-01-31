@@ -169,7 +169,7 @@ All endpoints follow a consistent response format:
 
 ## Security Features
 
-- ✅ JWT authentication
+- ✅ JWT authentication for admin endpoints
 - ✅ Password hashing (bcrypt)
 - ✅ Rate limiting
 - ✅ Input validation (Joi schemas)
@@ -177,7 +177,20 @@ All endpoints follow a consistent response format:
 - ✅ XSS protection
 - ✅ Helmet security headers
 - ✅ CORS configuration
-- ✅ Role-based access control
+- ✅ Role-based access control for admins
+
+### Telegram Bot Security Model
+
+Endpoints marked as "Public (Telegram bot)" are designed to be called by Telegram bots:
+- The Telegram bot handles user authentication through Telegram's built-in OAuth
+- The bot verifies user identity before calling API endpoints
+- The bot passes verified Telegram IDs to the API
+- This is a standard pattern for Telegram bot applications
+
+For production deployment, consider:
+- Implementing webhook signature verification
+- Using IP whitelisting for bot servers
+- Adding API keys for bot authentication
 
 ---
 
