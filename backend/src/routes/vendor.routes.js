@@ -17,11 +17,12 @@ const { uploadSingle } = require('../middleware/upload.middleware');
 
 // Public routes
 router.get('/', getAllVendors);
-router.get('/:id', validateObjectId('id'), getVendorById);
 router.get('/telegram/:telegramId', getVendorByTelegramId);
 
 // Vendor registration (Telegram bot)
 router.post('/register', validate(vendorSchemas.register), registerVendor);
+
+router.get('/:id', validateObjectId('id'), getVendorById);
 
 // Vendor routes
 router.put('/:id', validateObjectId('id'), validate(vendorSchemas.update), updateVendor);
