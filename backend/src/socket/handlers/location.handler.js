@@ -102,12 +102,19 @@ module.exports = (io, socket) => {
   /**
    * Stop tracking driver location
    */
-  socket.on('location:stop-tracking', (orderId) => {
-    const order = Order.findById(orderId);
-    if (order && order.driver) {
-      const roomName = `driver-location:${order.driver}`;
-      socket.leave(roomName);
-      socket.emit('location:tracking-stopped', { orderId });
+  socket.on('location:stop-tracking', async (orderId) => {
+    try {
+      const order = await Order.findById(orderId);
+      if (order && order.driver) {
+        const roomName = `driver-location:${order.driver}`;
+        socket.leave(roomName);
+        socket.emit('location:tracking-stopped', { orderId });
+      } else {
+        socket.emit('error', { message: 'Order not found or no driver assigned' });
+      }
+    } catch (error) {
+      logger.error('Error stopping location tracking:', error);
+      socket.emit('error', { message: 'Failed to stop tracking' });
     }
   });
 };

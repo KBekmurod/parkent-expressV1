@@ -1,5 +1,4 @@
 const socketIO = require('socket.io');
-const jwt = require('jsonwebtoken');
 const logger = require('../utils/logger');
 const { socketAuth } = require('./middleware/socketAuth');
 const orderHandler = require('./handlers/order.handler');
@@ -97,5 +96,7 @@ module.exports = {
   initSocket,
   getIO,
   emitToRoom,
-  emitToUser
+  emitToUser,
+  // Export broadcast utilities for use in controllers
+  ...require('./utils/broadcast')
 };

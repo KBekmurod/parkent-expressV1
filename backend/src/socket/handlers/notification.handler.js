@@ -2,18 +2,6 @@ const logger = require('../../utils/logger');
 
 module.exports = (io, socket) => {
   /**
-   * Send notification to user
-   */
-  socket.sendNotification = (userType, userId, notification) => {
-    const room = `${userType}:${userId}`;
-    io.to(room).emit('notification', {
-      ...notification,
-      timestamp: new Date()
-    });
-    logger.info(`Notification sent to ${room}: ${notification.title}`);
-  };
-
-  /**
    * Mark notification as read
    */
   socket.on('notification:read', (notificationId) => {

@@ -75,41 +75,4 @@ module.exports = (io, socket) => {
       socket.emit('error', { message: 'Failed to get order status' });
     }
   });
-
-  /**
-   * Broadcast order status change (called from controller)
-   * This is a server-side function, not a socket event
-   */
-  socket.broadcastOrderStatus = (orderId, status, order) => {
-    const roomName = `order:${orderId}`;
-    io.to(roomName).emit('order:status:changed', {
-      orderId,
-      status,
-      timeline: order.timeline,
-      timestamp: new Date()
-    });
-
-    // Also emit to customer, vendor, driver rooms
-    if (order.customer) {
-      io.to(`customer:${order.customer}`).emit('order:update', {
-        orderId,
-        status,
-        message: `Order status updated to ${status}`
-      });
-    }
-    if (order.vendor) {
-      io.to(`vendor:${order.vendor}`).emit('order:update', {
-        orderId,
-        status,
-        message: `Order status updated to ${status}`
-      });
-    }
-    if (order.driver) {
-      io.to(`driver:${order.driver}`).emit('order:update', {
-        orderId,
-        status,
-        message: `Order status updated to ${status}`
-      });
-    }
-  };
 };
