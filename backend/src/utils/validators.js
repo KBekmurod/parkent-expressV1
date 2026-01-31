@@ -79,6 +79,7 @@ const driverSchemas = {
  */
 const productSchemas = {
   create: Joi.object({
+    vendor: Joi.string().pattern(/^[0-9a-fA-F]{24}$/).required(),
     name: Joi.object({
       uz: Joi.string().trim().required(),
       ru: Joi.string().trim().allow('')
@@ -115,6 +116,7 @@ const productSchemas = {
  */
 const orderSchemas = {
   create: Joi.object({
+    customer: Joi.string().pattern(/^[0-9a-fA-F]{24}$/).required(),
     vendor: Joi.string().pattern(/^[0-9a-fA-F]{24}$/).required(),
     items: Joi.array().items(
       Joi.object({
