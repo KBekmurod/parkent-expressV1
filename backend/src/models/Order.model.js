@@ -148,7 +148,7 @@ orderSchema.index({ status: 1, createdAt: -1 });
 
 // Add status to timeline before save
 orderSchema.pre('save', function(next) {
-  if (this.isModified('status')) {
+  if (this.isModified('status') || this.isNew) {
     this.timeline.push({
       status: this.status,
       timestamp: new Date()

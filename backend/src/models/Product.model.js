@@ -58,7 +58,9 @@ const productSchema = new mongoose.Schema({
     max: 100 // percentage
   }
 }, {
-  timestamps: true
+  timestamps: true,
+  toJSON: { virtuals: true },
+  toObject: { virtuals: true }
 });
 
 // Indexes
