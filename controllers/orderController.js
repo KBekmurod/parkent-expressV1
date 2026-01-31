@@ -151,8 +151,23 @@ exports.getOrder = async (req, res, next) => {
 
     // Check authorization
     const isCustomer = order.customer._id.toString() === req.user.id;
-    const isVendor = order.vendor.user && order.vendor.user.toString() === req.user.id;
-    const isDriver = order.driver && order.driver.user && order.driver.user.toString() === req.user.id;
+    
+    // For vendor authorization, we need to check the vendor's user field
+    let isVendor = false;
+    if (req.user.role === 'vendor') {
+      const Vendor = require('../models/Vendor');
+      const vendor = await Vendor.findById(order.vendor._id);
+      isVendor = vendor && vendor.user.toString() === req.user.id;
+    }
+    
+    // For driver authorization, we need to check the driver's user field
+    let isDriver = false;
+    if (order.driver && req.user.role === 'driver') {
+      const Driver = require('../models/Driver');
+      const driver = await Driver.findById(order.driver._id);
+      isDriver = driver && driver.user.toString() === req.user.id;
+    }
+    
     const isAdmin = req.user.role === 'admin';
 
     if (!isCustomer && !isVendor && !isDriver && !isAdmin) {
