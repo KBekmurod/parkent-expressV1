@@ -151,9 +151,35 @@ const orderSchemas = {
 const reviewSchemas = {
   create: Joi.object({
     order: Joi.string().pattern(/^[0-9a-fA-F]{24}$/).required(),
-    vendorRating: Joi.number().min(1).max(5).required(),
-    driverRating: Joi.number().min(1).max(5),
-    comment: Joi.string().trim().max(500).allow('')
+    customer: Joi.string().pattern(/^[0-9a-fA-F]{24}$/).required(),
+    vendor: Joi.string().pattern(/^[0-9a-fA-F]{24}$/).required(),
+    driver: Joi.string().pattern(/^[0-9a-fA-F]{24}$/),
+    foodRating: Joi.number().min(1).max(5).required(),
+    deliveryRating: Joi.number().min(1).max(5),
+    comment: Joi.string().max(500).trim()
+  })
+};
+
+/**
+ * Category validation schemas
+ */
+const categorySchemas = {
+  create: Joi.object({
+    name: Joi.object({
+      uz: Joi.string().required().trim(),
+      ru: Joi.string().required().trim()
+    }).required(),
+    icon: Joi.string().trim(),
+    order: Joi.number().integer().min(0)
+  }),
+  update: Joi.object({
+    name: Joi.object({
+      uz: Joi.string().trim(),
+      ru: Joi.string().trim()
+    }),
+    icon: Joi.string().trim(),
+    order: Joi.number().integer().min(0),
+    isActive: Joi.boolean()
   })
 };
 
@@ -183,5 +209,6 @@ module.exports = {
   productSchemas,
   orderSchemas,
   reviewSchemas,
-  adminSchemas
+  adminSchemas,
+  categorySchemas
 };
