@@ -68,7 +68,11 @@ const createReview = asyncHandler(async (req, res, next) => {
  * @access  Public
  */
 const getReviewsByVendor = asyncHandler(async (req, res, next) => {
-  const { page = 1, limit = 20 } = req.query;
+  let { page = 1, limit = 20 } = req.query;
+
+  // Validate and sanitize pagination parameters
+  page = Math.max(1, parseInt(page));
+  limit = Math.min(100, Math.max(1, parseInt(limit)));
 
   // Pagination
   const skip = (page - 1) * limit;
@@ -111,7 +115,11 @@ const getReviewsByVendor = asyncHandler(async (req, res, next) => {
  * @access  Public
  */
 const getReviewsByDriver = asyncHandler(async (req, res, next) => {
-  const { page = 1, limit = 20 } = req.query;
+  let { page = 1, limit = 20 } = req.query;
+
+  // Validate and sanitize pagination parameters
+  page = Math.max(1, parseInt(page));
+  limit = Math.min(100, Math.max(1, parseInt(limit)));
 
   // Pagination
   const skip = (page - 1) * limit;
@@ -154,7 +162,11 @@ const getReviewsByDriver = asyncHandler(async (req, res, next) => {
  * @access  Private/Admin
  */
 const getAllReviews = asyncHandler(async (req, res, next) => {
-  const { vendor, driver, customer, minRating, page = 1, limit = 20 } = req.query;
+  let { vendor, driver, customer, minRating, page = 1, limit = 20 } = req.query;
+
+  // Validate and sanitize pagination parameters
+  page = Math.max(1, parseInt(page));
+  limit = Math.min(100, Math.max(1, parseInt(limit)));
 
   // Build query
   const query = {};

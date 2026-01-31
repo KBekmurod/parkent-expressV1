@@ -96,8 +96,8 @@ const updateCategory = asyncHandler(async (req, res, next) => {
   const { name, icon, order, isActive } = req.body;
 
   // Update fields
-  if (name) category.name = name;
-  if (icon) category.icon = icon;
+  if (typeof name !== 'undefined') category.name = name;
+  if (typeof icon !== 'undefined') category.icon = icon;
   if (typeof order !== 'undefined') category.order = order;
   if (typeof isActive !== 'undefined') category.isActive = isActive;
 

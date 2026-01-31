@@ -156,7 +156,7 @@ const reviewSchemas = {
     driver: Joi.string().pattern(/^[0-9a-fA-F]{24}$/),
     foodRating: Joi.number().min(1).max(5).required(),
     deliveryRating: Joi.number().min(1).max(5),
-    comment: Joi.string().max(500).trim()
+    comment: Joi.string().trim().max(500)
   })
 };
 

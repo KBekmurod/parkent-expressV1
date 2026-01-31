@@ -17,6 +17,8 @@ const { reviewSchemas } = require('../utils/validators');
 router.get('/', protect, adminAuth, getAllReviews);
 
 // Public routes (Telegram bot)
+// Note: Review creation is public to allow Telegram bot submissions
+// In production, consider adding bot-specific authentication middleware
 router.post('/', validate(reviewSchemas.create), createReview);
 router.get('/vendor/:vendorId', validateObjectId('vendorId'), getReviewsByVendor);
 router.get('/driver/:driverId', validateObjectId('driverId'), getReviewsByDriver);
