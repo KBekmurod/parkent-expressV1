@@ -223,21 +223,29 @@ const deleteReview = asyncHandler(async (req, res, next) => {
   await review.deleteOne();
 
   // Note: Need to manually recalculate ratings after deletion
-  // Recalculate vendor rating
+  // Recalculate vendor rating using aggregation
   if (review.vendor) {
-    const vendorReviews = await Review.find({ vendor: review.vendor });
-    const avgRating = vendorReviews.length > 0
-      ? vendorReviews.reduce((sum, r) => sum + r.rating, 0) / vendorReviews.length
+    const vendorStats = await Review.aggregate([
+      { $match: { vendor: review.vendor } },
+      { $group: { _id: null, avgRating: { $avg: '$rating' } } }
+    ]);
+    
+    const avgRating = vendorStats.length > 0 
+      ? Math.round(vendorStats[0].avgRating * 10) / 10 
       : 0;
     
     await Vendor.findByIdAndUpdate(review.vendor, { rating: avgRating });
   }
 
-  // Recalculate driver rating
+  // Recalculate driver rating using aggregation
   if (review.driver) {
-    const driverReviews = await Review.find({ driver: review.driver });
-    const avgRating = driverReviews.length > 0
-      ? driverReviews.reduce((sum, r) => sum + r.rating, 0) / driverReviews.length
+    const driverStats = await Review.aggregate([
+      { $match: { driver: review.driver, deliveryRating: { $exists: true } } },
+      { $group: { _id: null, avgRating: { $avg: '$deliveryRating' } } }
+    ]);
+    
+    const avgRating = driverStats.length > 0 
+      ? Math.round(driverStats[0].avgRating * 10) / 10 
       : 0;
     
     await Driver.findByIdAndUpdate(review.driver, { rating: avgRating });

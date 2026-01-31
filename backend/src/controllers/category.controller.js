@@ -179,6 +179,18 @@ const reorderCategories = asyncHandler(async (req, res, next) => {
     return next(new AppError('categoryOrders must be an array', 400));
   }
 
+  if (categoryOrders.length === 0) {
+    return next(new AppError('categoryOrders cannot be empty', 400));
+  }
+
+  // Validate all category IDs exist before updating
+  const categoryIds = categoryOrders.map(item => item.id);
+  const existingCategories = await Category.find({ _id: { $in: categoryIds } });
+  
+  if (existingCategories.length !== categoryIds.length) {
+    return next(new AppError('One or more category IDs are invalid', 400));
+  }
+
   // Update each category's order
   const updatePromises = categoryOrders.map(({ id, order }) => {
     return Category.findByIdAndUpdate(id, { order }, { new: true });
