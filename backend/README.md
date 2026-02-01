@@ -1,69 +1,115 @@
-# Parkent Express - Backend
+# Backend API Documentation
 
-Food delivery system backend API built with Express.js and MongoDB.
+Node.js/Express.js backend with MongoDB, Socket.io, and Telegram Bots.
 
-## 🚀 Quick Start
-
-### Prerequisites
-- Node.js 20+
-- MongoDB 6+
-
-### Installation
-
-1. Install dependencies:
-```bash
-npm install
-```
-
-2. Create .env file:
-```bash
-cp .env.example .env
-```
-
-3. Update .env with your configuration
-
-4. Start development server:
-```bash
-npm run dev
-```
-
-Server will run on http://localhost:5000
-
-## 📁 Project Structure
+## 🏗️ Architecture
 
 ```
 backend/
 ├── src/
-│   ├── config/       # Configuration files
-│   ├── models/       # Mongoose models
-│   ├── controllers/  # Route controllers
-│   ├── routes/       # API routes
-│   ├── middleware/   # Custom middleware
-│   ├── services/     # Business logic
-│   ├── bots/         # Telegram bots
-│   ├── utils/        # Utility functions
-│   └── socket/       # Socket.io handlers
-├── uploads/          # File uploads
-└── server.js         # Entry point
+│   ├── config/          # Configuration
+│   ├── controllers/     # Business logic
+│   ├── models/          # Database models
+│   ├── routes/          # API routes
+│   ├── middleware/      # Middleware
+│   ├── utils/           # Utilities
+│   ├── socket/          # Socket.io
+│   └── bots/            # Telegram bots
+└── server.js            # Entry point
 ```
 
-## 🔌 API Endpoints
+## 🚀 Getting Started
 
-- GET `/health` - Health check
-- GET `/` - API info
+### Installation
 
-(More endpoints will be added in next steps)
+```bash
+npm install
+```
 
-## 📦 Tech Stack
+### Configuration
 
-- Express.js - Web framework
-- MongoDB - Database
-- Mongoose - ODM
-- JWT - Authentication
-- Socket.io - Real-time
-- Winston - Logging
-- Telegram Bot API - Bots
+```bash
+cp .env.example .env
+nano .env
+```
 
-## 👨‍💻 Author
+Required environment variables:
+```env
+PORT=5000
+MONGODB_URI=mongodb://localhost:27017/parkent-express
+JWT_SECRET=your-secret-key
+CUSTOMER_BOT_TOKEN=token
+VENDOR_BOT_TOKEN=token
+DRIVER_BOT_TOKEN=token
+```
 
-KBekmurod
+### Running
+
+```bash
+# Development
+npm run dev
+
+# Production
+npm start
+
+# Tests
+npm test
+```
+
+## 📋 API Endpoints
+
+See [API.md](./API.md) for complete API reference.
+
+### Key Endpoints
+
+**Authentication:**
+- `POST /api/v1/auth/register` - Register user
+- `POST /api/v1/auth/login` - Login
+
+**Vendors:**
+- `GET /api/v1/vendors` - List vendors
+- `GET /api/v1/vendors/:id` - Get vendor
+
+**Products:**
+- `GET /api/v1/products` - List products
+- `POST /api/v1/products` - Create product (Vendor)
+
+**Orders:**
+- `POST /api/v1/orders` - Create order (Customer)
+- `GET /api/v1/orders/:id/track` - Track order
+
+## 🔐 Authentication
+
+All protected routes require JWT token in header:
+```
+Authorization: Bearer <token>
+```
+
+## 🤖 Telegram Bots
+
+Three bots are integrated:
+1. **Customer Bot** - Order food, track delivery
+2. **Vendor Bot** - Manage menu, accept orders
+3. **Driver Bot** - Accept deliveries, track earnings
+
+See [TELEGRAM_BOTS.md](../docs/TELEGRAM_BOTS.md) for details.
+
+## 🔒 Security
+
+- Bcrypt password hashing
+- JWT authentication
+- Rate limiting
+- CORS protection
+- Helmet security headers
+- Input validation
+
+## 📖 Additional Documentation
+
+- [Complete API Reference](./API.md)
+- [API Documentation](../docs/API_DOCUMENTATION.md)
+- [Setup Guide](../docs/SETUP.md)
+- [Configuration](../docs/CONFIGURATION.md)
+
+## 📜 License
+
+MIT License - see [LICENSE](../LICENSE)
