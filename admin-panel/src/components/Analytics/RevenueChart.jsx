@@ -1,6 +1,18 @@
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts'
 
 const RevenueChart = ({ data }) => {
+  // Guard against null/undefined data
+  if (!data || !Array.isArray(data) || data.length === 0) {
+    return (
+      <div className="card">
+        <h3 className="text-xl font-bold mb-4">Revenue Analytics</h3>
+        <div className="flex items-center justify-center h-[400px] text-gray-400">
+          No data available
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="card">
       <h3 className="text-xl font-bold mb-4">Revenue Analytics</h3>

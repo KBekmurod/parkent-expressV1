@@ -30,15 +30,22 @@ export const exportToPDF = async (data, filename) => {
   printWindow.document.write(htmlContent)
   printWindow.document.close()
   
+  // Use flag to prevent duplicate print calls
+  let printCalled = false
+  
   // Wait for content to load before printing
   printWindow.onload = () => {
-    printWindow.print()
+    if (!printCalled) {
+      printCalled = true
+      printWindow.print()
+    }
   }
   
   // Fallback: trigger print if onload doesn't fire
   setTimeout(() => {
     try {
-      if (printWindow && !printWindow.closed) {
+      if (printWindow && !printWindow.closed && !printCalled) {
+        printCalled = true
         printWindow.print()
       }
     } catch (error) {

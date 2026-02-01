@@ -1,6 +1,18 @@
 import { Star, TrendingUp, Package } from 'lucide-react'
 
 const VendorPerformance = ({ data }) => {
+  // Guard against null/undefined or empty data
+  if (!data || !Array.isArray(data) || data.length === 0) {
+    return (
+      <div className="card">
+        <h3 className="text-xl font-bold mb-4">Top Performing Vendors</h3>
+        <div className="flex items-center justify-center h-[200px] text-gray-400">
+          No data available
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="card">
       <h3 className="text-xl font-bold mb-4">Top Performing Vendors</h3>
