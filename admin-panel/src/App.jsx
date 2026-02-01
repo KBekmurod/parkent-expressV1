@@ -10,6 +10,8 @@ import Drivers from './pages/Drivers'
 import Orders from './pages/Orders'
 import Products from './pages/Products'
 import Settings from './pages/Settings'
+import Analytics from './pages/Analytics'
+import Reports from './pages/Reports'
 import PrivateRoute from './components/PrivateRoute'
 
 function App() {
@@ -27,6 +29,8 @@ function App() {
           <Route path="drivers" element={<Drivers />} />
           <Route path="orders" element={<Orders />} />
           <Route path="products" element={<Products />} />
+          <Route path="analytics" element={<Analytics />} />
+          <Route path="reports" element={<Reports />} />
           <Route path="settings" element={<Settings />} />
         </Route>
       </Routes>
