@@ -71,7 +71,7 @@ const startLocationTracking = async (bot, chatId, driverId) => {
         // Request live location
         await bot.sendMessage(
           chatId,
-          '📍 Joylashuvingizni yangilang:',
+          MESSAGES.uz.shareLocation,
           {
             reply_markup: {
               keyboard: [

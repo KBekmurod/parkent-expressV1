@@ -354,6 +354,7 @@ const showHelp = async (bot, chatId) => {
     
     message += '📞 *Muammolar:*\n';
     message += 'Savol yoki muammo bo\'lsa admin bilan bog\'laning\n';
+    // TODO: Replace with actual admin contact from config
     message += 'Telefon: +998 XX XXX XX XX';
 
     await bot.sendMessage(chatId, message, { parse_mode: 'Markdown' });

@@ -1,4 +1,5 @@
 const TelegramBot = require('node-telegram-bot-api');
+const axios = require('axios');
 const logger = require('../../utils/logger');
 
 // Handlers
@@ -94,7 +95,6 @@ const handleTextCommand = async (bot, msg) => {
     }
 
     // Get driver
-    const axios = require('axios');
     const API_URL = process.env.API_URL || 'http://localhost:5000/api/v1';
     const response = await axios.get(`${API_URL}/drivers/telegram/${telegramId}`);
     const driver = response.data.data.driver;
