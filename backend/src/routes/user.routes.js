@@ -3,6 +3,7 @@ const router = express.Router();
 const {
   registerUser,
   getUserByTelegramId,
+  updateUserByTelegramId,
   getAllUsers,
   getUserById,
   addAddress,
@@ -17,6 +18,7 @@ const { userSchemas } = require('../utils/validators');
 // Public routes (Telegram bot)
 router.post('/register', validate(userSchemas.register), registerUser);
 router.get('/telegram/:telegramId', getUserByTelegramId);
+router.put('/telegram/:telegramId', updateUserByTelegramId); // For phone update
 router.post('/:id/addresses', validateObjectId('id'), validate(userSchemas.addAddress), addAddress);
 router.put('/:id/addresses/:addressIndex', validateObjectId('id'), validate(userSchemas.addAddress), updateAddress);
 router.delete('/:id/addresses/:addressIndex', validateObjectId('id'), deleteAddress);

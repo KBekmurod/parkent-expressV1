@@ -9,16 +9,23 @@ const logger = require('../utils/logger');
  * @access  Public (Telegram bot)
  */
 const registerUser = asyncHandler(async (req, res, next) => {
-  const { telegramId, firstName, lastName, phone } = req.body;
+  const { telegramId, firstName, lastName, username, phone } = req.body;
 
   // Check if user exists
   let user = await User.findOne({ telegramId });
+  let isNewUser = false;
 
   if (user) {
+    // Update user info if provided
+    if (phone && phone !== user.phone) {
+      user.phone = phone;
+      await user.save();
+    }
+    
     return res.status(200).json({
       success: true,
       message: 'User already exists',
-      data: { user }
+      data: { user, isNewUser: false }
     });
   }
 
@@ -27,15 +34,16 @@ const registerUser = asyncHandler(async (req, res, next) => {
     telegramId,
     firstName,
     lastName,
-    phone
+    phone: phone || ''
   });
 
+  isNewUser = true;
   logger.info(`New user registered: ${telegramId}`);
 
   res.status(201).json({
     success: true,
     message: 'User registered successfully',
-    data: { user }
+    data: { user, isNewUser }
   });
 });
 
@@ -53,6 +61,34 @@ const getUserByTelegramId = asyncHandler(async (req, res, next) => {
 
   res.status(200).json({
     success: true,
+    data: { user }
+  });
+});
+
+/**
+ * @desc    Update user by Telegram ID
+ * @route   PUT /api/v1/users/telegram/:telegramId
+ * @access  Public (Telegram bot)
+ */
+const updateUserByTelegramId = asyncHandler(async (req, res, next) => {
+  const { phone, firstName, lastName } = req.body;
+  
+  const user = await User.findOne({ telegramId: req.params.telegramId });
+
+  if (!user) {
+    return next(new AppError('User not found', 404));
+  }
+
+  // Update fields if provided
+  if (phone) user.phone = phone;
+  if (firstName) user.firstName = firstName;
+  if (lastName !== undefined) user.lastName = lastName;
+
+  await user.save();
+
+  res.status(200).json({
+    success: true,
+    message: 'User updated successfully',
     data: { user }
   });
 });
@@ -250,6 +286,7 @@ const updateUserStatus = asyncHandler(async (req, res, next) => {
 module.exports = {
   registerUser,
   getUserByTelegramId,
+  updateUserByTelegramId,
   getAllUsers,
   getUserById,
   addAddress,
