@@ -29,7 +29,22 @@ export const exportToPDF = async (data, filename) => {
   
   printWindow.document.write(htmlContent)
   printWindow.document.close()
-  printWindow.print()
+  
+  // Wait for content to load before printing
+  printWindow.onload = () => {
+    printWindow.print()
+  }
+  
+  // Fallback: trigger print if onload doesn't fire
+  setTimeout(() => {
+    try {
+      if (printWindow && !printWindow.closed) {
+        printWindow.print()
+      }
+    } catch (error) {
+      console.error('Print error:', error)
+    }
+  }, 100)
 }
 
 const escapeCSVValue = (value) => {

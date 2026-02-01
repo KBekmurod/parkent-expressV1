@@ -3,6 +3,18 @@ import { AreaChart as RechartsArea, Area, XAxis, YAxis, CartesianGrid, Tooltip, 
 const AreaChart = ({ data, title, dataKeys }) => {
   const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444']
 
+  // Guard against null/undefined data
+  if (!data || !Array.isArray(data) || data.length === 0) {
+    return (
+      <div className="card">
+        {title && <h3 className="text-xl font-bold mb-4">{title}</h3>}
+        <div className="flex items-center justify-center h-[300px] text-gray-400">
+          No data available
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="card">
       {title && <h3 className="text-xl font-bold mb-4">{title}</h3>}

@@ -2,17 +2,37 @@ import { Calendar } from 'lucide-react'
 
 const DateRangePicker = ({ startDate, endDate, onChange }) => {
   const handleStartChange = (e) => {
-    onChange({
-      startDate: new Date(e.target.value),
-      endDate,
-    })
+    const newStartDate = new Date(e.target.value)
+    
+    // Ensure start date is not after end date
+    if (newStartDate > endDate) {
+      onChange({
+        startDate: newStartDate,
+        endDate: newStartDate,
+      })
+    } else {
+      onChange({
+        startDate: newStartDate,
+        endDate,
+      })
+    }
   }
 
   const handleEndChange = (e) => {
-    onChange({
-      startDate,
-      endDate: new Date(e.target.value),
-    })
+    const newEndDate = new Date(e.target.value)
+    
+    // Ensure end date is not before start date
+    if (newEndDate < startDate) {
+      onChange({
+        startDate: newEndDate,
+        endDate: newEndDate,
+      })
+    } else {
+      onChange({
+        startDate,
+        endDate: newEndDate,
+      })
+    }
   }
 
   const formatDate = (date) => {
