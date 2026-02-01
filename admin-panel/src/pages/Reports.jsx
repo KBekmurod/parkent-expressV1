@@ -20,7 +20,8 @@ const Reports = () => {
       const data = await analyticsService.getAnalytics()
       setReports(data)
     } catch (error) {
-      toast.error('Failed to load reports')
+      console.error('Reports error:', error)
+      toast.error(error.response?.data?.message || error.message || 'Failed to load reports')
     } finally {
       setLoading(false)
     }

@@ -30,7 +30,8 @@ const Analytics = () => {
       })
       setAnalytics(data)
     } catch (error) {
-      toast.error('Failed to load analytics')
+      console.error('Analytics error:', error)
+      toast.error(error.response?.data?.message || error.message || 'Failed to load analytics')
     } finally {
       setLoading(false)
     }

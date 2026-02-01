@@ -1,6 +1,6 @@
 export const exportToPDF = async (data, filename) => {
   // Simple PDF export using browser print
-  const printWindow = window.open('', '_blank')
+  const printWindow = window.open('', '_blank', 'noopener,noreferrer')
   
   if (!printWindow) {
     throw new Error('Popup blocked! Please allow popups for this site to export reports.')

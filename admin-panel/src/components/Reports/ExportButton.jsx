@@ -12,7 +12,8 @@ const ExportButton = ({ data, filename, type = 'pdf' }) => {
       }
       toast.success(`Report exported successfully`)
     } catch (error) {
-      toast.error('Failed to export report')
+      console.error('Export error:', error)
+      toast.error(error.message || 'Failed to export report')
     }
   }
 
