@@ -1,0 +1,79 @@
+version: '3.8'
+
+services:
+  # MongoDB Database
+  mongo:
+    image: mongo:7.0
+    container_name: parkent-mongo
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_DATABASE: parkent-express
+    ports:
+      - '27017:27017'
+    volumes:
+      - mongo-data:/data/db
+      - mongo-config:/data/configdb
+    networks:
+      - parkent-network
+
+  # Backend API
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: parkent-backend
+    restart: unless-stopped
+    env_file:
+      - ./backend/.env
+    environment:
+      - NODE_ENV=development
+      - MONGODB_URI=mongodb://mongo:27017/parkent-express
+    ports:
+      - '5000:5000'
+    volumes:
+      - ./backend/src:/app/src
+      - ./backend/uploads:/app/uploads
+      - backend-node-modules:/app/node_modules
+    depends_on:
+      - mongo
+    networks:
+      - parkent-network
+    command: npm run dev
+
+  # Admin Panel
+  admin:
+    build:
+      context: ./admin-panel
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: http://localhost:5000/api/v1
+    container_name: parkent-admin
+    restart: unless-stopped
+    ports:
+      - '3000:80'
+    depends_on:
+      - backend
+    networks:
+      - parkent-network
+
+  # Redis (Optional - for production caching)
+  redis:
+    image: redis:7-alpine
+    container_name: parkent-redis
+    restart: unless-stopped
+    ports:
+      - '6379:6379'
+    volumes:
+      - redis-data:/data
+    networks:
+      - parkent-network
+
+networks:
+  parkent-network:
+    driver: bridge
+
+volumes:
+  mongo-data:
+  mongo-config:
+  backend-node-modules:
+  redis-data:
