@@ -9,6 +9,8 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install dependencies (using npm install since no lock file exists)
+# Note: For production, it's recommended to generate and commit package-lock.json
+# to ensure reproducible builds across environments
 RUN npm install --omit=dev && npm cache clean --force
 
 # Development dependencies
