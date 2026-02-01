@@ -27,7 +27,7 @@ echo "✅ Backup completed: ${BACKUP_DIR}/${BACKUP_NAME}.archive"
 
 # Keep only last 7 backups
 cd $BACKUP_DIR
-BACKUP_COUNT=$(ls -1 parkent_backup_*.archive 2>/dev/null | wc -l)
+BACKUP_COUNT=$(ls -1 parkent_backup_*.archive 2>/dev/null | wc -l | tr -d ' ')
 if [ "$BACKUP_COUNT" -gt 7 ]; then
     ls -t parkent_backup_*.archive | tail -n +8 | xargs rm -f
     echo "🧹 Old backups cleaned up"
