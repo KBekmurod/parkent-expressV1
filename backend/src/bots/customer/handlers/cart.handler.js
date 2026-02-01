@@ -75,9 +75,8 @@ const handleCartCallback = async (bot, callbackQuery) => {
   const chatId = callbackQuery.message.chat.id;
   const action = callbackQuery.data.split(':')[1];
 
-  await bot.answerCallbackQuery(callbackQuery.id);
-
   if (action === 'view') {
+    await bot.answerCallbackQuery(callbackQuery.id);
     await showCart(bot, chatId);
   } else if (action === 'clear') {
     clearCart(chatId);
@@ -85,8 +84,8 @@ const handleCartCallback = async (bot, callbackQuery) => {
       text: '🗑️ Savat tozalandi',
       show_alert: true
     });
-    await bot.sendMessage(chatId, MESSAGES.uz.cartCleared);
   } else if (action === 'checkout') {
+    await bot.answerCallbackQuery(callbackQuery.id);
     // Proceed to address selection
     const addressHandler = require('./address.handler');
     await addressHandler.requestAddress(bot, chatId);

@@ -5,6 +5,10 @@ const logger = require('../../../utils/logger');
 const API_URL = process.env.API_URL || 'http://localhost:5000/api/v1';
 
 // Temporary cart storage (in production, use Redis or Database)
+// TODO: Replace with Redis-based storage for production use to support:
+// - Persistence across server restarts
+// - Multi-instance deployments
+// - Better scalability
 const userCarts = new Map();
 
 /**
@@ -206,8 +210,6 @@ const handleProductCallback = async (bot, callbackQuery) => {
   const action = data[2];
   const quantity = parseInt(data[3]) || 1;
 
-  await bot.answerCallbackQuery(callbackQuery.id);
-
   if (action === 'add') {
     // Add to cart
     const cart = userCarts.get(chatId) || [];
@@ -226,6 +228,7 @@ const handleProductCallback = async (bot, callbackQuery) => {
       show_alert: false
     });
   } else {
+    await bot.answerCallbackQuery(callbackQuery.id);
     await showProductDetails(bot, chatId, productId);
   }
 };

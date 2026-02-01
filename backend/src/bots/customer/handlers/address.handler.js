@@ -68,6 +68,10 @@ const handleLocationMessage = async (bot, msg) => {
   await bot.sendMessage(chatId, MESSAGES.uz.requestAddressTitle);
 
   // Store location temporarily (in production, use session storage)
+  // TODO: Replace with Redis-based session storage for production use to support:
+  // - Persistence across server restarts
+  // - Multi-process environments
+  // - Better scalability and reliability
   global.pendingAddresses = global.pendingAddresses || new Map();
   global.pendingAddresses.set(chatId, { lat: latitude, lng: longitude });
 };
