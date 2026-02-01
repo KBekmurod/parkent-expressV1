@@ -23,7 +23,7 @@ cp admin-panel/.env.example admin-panel/.env
 
 3. Start services:
 ```bash
-docker-compose up -d
+docker compose up -d
 ```
 
 4. Access:
@@ -57,13 +57,13 @@ chmod +x scripts/deploy.sh
 
 ```bash
 # Install certbot
-docker-compose run --rm certbot certonly --webroot \
+docker compose run --rm certbot certonly --webroot \
   --webroot-path=/var/www/certbot \
   -d yourdomain.com -d www.yourdomain.com
 
 # Update nginx config to use SSL
 # Restart nginx
-docker-compose restart nginx
+docker compose restart nginx
 ```
 
 ## Backup & Restore
@@ -84,12 +84,12 @@ chmod +x scripts/restore.sh
 
 View logs:
 ```bash
-docker-compose logs -f [service_name]
+docker compose logs -f [service_name]
 ```
 
 Container status:
 ```bash
-docker-compose ps
+docker compose ps
 ```
 
 ## Troubleshooting

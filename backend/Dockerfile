@@ -8,14 +8,14 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies
-RUN npm ci --only=production && npm cache clean --force
+# Install dependencies (using npm install since no lock file exists)
+RUN npm install --omit=dev && npm cache clean --force
 
 # Development dependencies
 FROM base AS dev-deps
 WORKDIR /app
 COPY package*.json ./
-RUN npm ci
+RUN npm install
 
 # Build stage
 FROM base AS builder
