@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { orderService } from '../../services/orderService'
-import { formatDate, getStatusBadge } from '../../utils/helpers'
+import { formatDate, getStatusBadge } from '../../utils/helpers.jsx'
 
 const RecentOrders = () => {
   const [orders, setOrders] = useState([])

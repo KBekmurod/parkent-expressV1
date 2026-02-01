@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { userService } from '../../services/userService'
-import { formatDate } from '../../utils/helpers'
+import { formatDate } from '../../utils/helpers.jsx'
 
 const RecentUsers = () => {
   const [users, setUsers] = useState([])
