@@ -216,7 +216,7 @@ const handleTextMessage = (bot) => async (msg) => {
         {
           reply_markup: {
             keyboard: [
-              [{ text: 'O\'tkazib yuborish' }]
+              [{ text: 'O'tkazib yuborish' }]
             ],
             resize_keyboard: true,
             one_time_keyboard: true
@@ -226,7 +226,7 @@ const handleTextMessage = (bot) => async (msg) => {
       );
     } else if (step === 'description') {
       // Save description (optional)
-      if (text !== 'O\'tkazib yuborish' && text !== 'Пропустить') {
+      if (text !== 'O'tkazib yuborish' && text !== 'Пропустить') {
         registrationState.description = text.trim();
       }
       registrationState.step = 'workingHours';

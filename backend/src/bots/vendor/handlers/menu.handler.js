@@ -189,7 +189,7 @@ const handleProductCreationStep = async (bot, msg, state) => {
         }
       );
     } else if (step === 'name_ru') {
-      if (text !== 'O\'tkazib yuborish' && text !== 'Пропустить') {
+      if (text !== 'O'tkazib yuborish' && text !== 'Пропустить') {
         state.data.name.ru = text.trim();
       }
       state.step = 'price';
@@ -240,7 +240,7 @@ const handleProductCreationStep = async (bot, msg, state) => {
         }
       );
     } else if (step === 'description_uz') {
-      if (text !== 'O\'tkazib yuborish' && text !== 'Пропустить') {
+      if (text !== 'O'tkazib yuborish' && text !== 'Пропустить') {
         state.data.description = { uz: text.trim() };
       }
       state.step = 'description_ru';
@@ -255,7 +255,7 @@ const handleProductCreationStep = async (bot, msg, state) => {
         }
       );
     } else if (step === 'description_ru') {
-      if (text !== 'O\'tkazib yuborish' && text !== 'Пропустить') {
+      if (text !== 'O'tkazib yuborish' && text !== 'Пропустить') {
         if (!state.data.description) {
           state.data.description = {};
         }
@@ -273,7 +273,7 @@ const handleProductCreationStep = async (bot, msg, state) => {
         }
       );
     } else if (step === 'photo') {
-      if (text === 'O\'tkazib yuborish' || text === 'Пропустить') {
+      if (text === 'O'tkazib yuborish' || text === 'Пропустить') {
         // Complete without photo
         await completeProductCreation(bot, chatId, state);
       }

@@ -5,8 +5,8 @@ const getProductMenuKeyboard = (vendorId, language = 'uz') => {
   const keyboards = {
     uz: {
       inline_keyboard: [
-        [{ text: '➕ Mahsulot qo\'shish', callback_data: `product:add:${vendorId}` }],
-        [{ text: '📋 Mahsulotlar ro\'yxati', callback_data: `product:list:${vendorId}` }],
+        [{ text: '➕ Mahsulot qo'shish', callback_data: `product:add:${vendorId}` }],
+        [{ text: '📋 Mahsulotlar ro'yxati', callback_data: `product:list:${vendorId}` }],
         [{ text: '🔙 Orqaga', callback_data: 'menu:main' }]
       ]
     },
@@ -112,7 +112,7 @@ const getProductPaginationKeyboard = (vendorId, currentPage, totalPages, languag
   }
 
   keyboard.push([{ 
-    text: language === 'uz' ? '➕ Mahsulot qo\'shish' : '➕ Добавить товар', 
+    text: language === 'uz' ? '➕ Mahsulot qo'shish' : '➕ Добавить товар', 
     callback_data: `product:add:${vendorId}` 
   }]);
   
