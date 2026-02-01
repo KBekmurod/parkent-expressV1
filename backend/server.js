@@ -98,6 +98,14 @@ server.listen(PORT, () => {
   logger.info(`🔌 Socket.io ready for connections`);
   console.log(`🚀 Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
   console.log(`🔌 Socket.io ready for connections`);
+  
+  // Initialize Telegram Bots
+  const { initCustomerBot } = require('./src/bots/customer');
+  const customerBot = initCustomerBot();
+  if (customerBot) {
+    logger.info('✅ Customer Bot started');
+    console.log('✅ Customer Bot started');
+  }
 });
 
 // Handle unhandled promise rejections

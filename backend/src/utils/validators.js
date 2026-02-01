@@ -8,7 +8,8 @@ const userSchemas = {
     telegramId: Joi.string().required(),
     firstName: Joi.string().trim().required(),
     lastName: Joi.string().trim().allow(''),
-    phone: Joi.string().trim().required()
+    username: Joi.string().trim().allow(''),
+    phone: Joi.string().trim().allow('')
   }),
   
   addAddress: Joi.object({
