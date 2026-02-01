@@ -2,6 +2,10 @@ export const exportToPDF = async (data, filename) => {
   // Simple PDF export using browser print
   const printWindow = window.open('', '_blank')
   
+  if (!printWindow) {
+    throw new Error('Popup blocked! Please allow popups for this site to export reports.')
+  }
+  
   const htmlContent = `
     <!DOCTYPE html>
     <html>
@@ -28,6 +32,21 @@ export const exportToPDF = async (data, filename) => {
   printWindow.print()
 }
 
+const escapeCSVValue = (value) => {
+  if (value === null || value === undefined) {
+    return ''
+  }
+  
+  const stringValue = String(value)
+  
+  // If value contains comma, quote, or newline, wrap in quotes and escape quotes
+  if (stringValue.includes(',') || stringValue.includes('"') || stringValue.includes('\n')) {
+    return `"${stringValue.replace(/"/g, '""')}"`
+  }
+  
+  return stringValue
+}
+
 export const exportToCSV = (data, filename) => {
   // Convert data to CSV format
   const csv = convertToCSV(data)
@@ -44,6 +63,7 @@ export const exportToCSV = (data, filename) => {
   document.body.appendChild(link)
   link.click()
   document.body.removeChild(link)
+  URL.revokeObjectURL(url)
 }
 
 const convertToCSV = (data) => {
@@ -51,18 +71,30 @@ const convertToCSV = (data) => {
     return ''
   }
 
-  // Simple CSV conversion
+  // Handle array of objects
+  if (Array.isArray(data)) {
+    if (data.length === 0) {
+      return ''
+    }
+    
+    const headers = Object.keys(data[0])
+    const headerRow = headers.map(escapeCSVValue).join(',')
+    
+    const rows = data.map(row => 
+      headers.map(header => {
+        const value = row[header]
+        return typeof value === 'object' ? escapeCSVValue(JSON.stringify(value)) : escapeCSVValue(value)
+      }).join(',')
+    )
+    
+    return [headerRow, ...rows].join('\n')
+  }
+
+  // Handle single object
   const headers = Object.keys(data)
   const values = Object.values(data).map(v => 
-    typeof v === 'object' ? JSON.stringify(v) : v
+    typeof v === 'object' ? escapeCSVValue(JSON.stringify(v)) : escapeCSVValue(v)
   )
 
-  return [headers.join(','), values.join(',')].join('\n')
-}
-
-export const exportToExcel = async (data, filename) => {
-  // For Excel export, you would use a library like xlsx
-  // This is a placeholder
-  console.log('Excel export not implemented yet')
-  // Example: XLSX.writeFile(workbook, `${filename}.xlsx`)
+  return [headers.map(escapeCSVValue).join(','), values.join(',')].join('\n')
 }

@@ -1,6 +1,13 @@
 import { DollarSign, ShoppingBag, TrendingUp, Users } from 'lucide-react'
 
 const MetricsGrid = ({ metrics }) => {
+  const colorClasses = {
+    blue: 'text-blue-600',
+    green: 'text-green-600',
+    purple: 'text-purple-600',
+    orange: 'text-orange-600',
+  }
+
   const metricCards = [
     {
       title: 'Total Revenue',
@@ -38,10 +45,10 @@ const MetricsGrid = ({ metrics }) => {
         <div key={index} className="card">
           <div className="flex items-center justify-between mb-2">
             <p className="text-sm text-gray-500">{metric.title}</p>
-            <metric.icon size={20} className={`text-${metric.color}-600`} />
+            <metric.icon size={20} className={colorClasses[metric.color]} />
           </div>
           <h3 className="text-2xl font-bold mb-1">{metric.value}</h3>
-          {metric.change && (
+          {metric.change !== undefined && (
             <p className={`text-sm ${metric.change >= 0 ? 'text-green-600' : 'text-red-600'}`}>
               {metric.change >= 0 ? '+' : ''}{metric.change}% from last period
             </p>
