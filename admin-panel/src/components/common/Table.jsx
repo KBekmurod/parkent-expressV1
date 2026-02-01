@@ -11,6 +11,8 @@ const Table = ({ columns, data, onEdit, onDelete, loading }) => {
     )
   }
 
+  const hasActions = onEdit || onDelete
+
   return (
     <div className="card overflow-x-auto">
       <table className="w-full">
@@ -21,7 +23,9 @@ const Table = ({ columns, data, onEdit, onDelete, loading }) => {
                 {column.label}
               </th>
             ))}
-            <th className="pb-3 font-medium text-gray-600">Actions</th>
+            {hasActions && (
+              <th className="pb-3 font-medium text-gray-600">Actions</th>
+            )}
           </tr>
         </thead>
         <tbody>
@@ -32,26 +36,28 @@ const Table = ({ columns, data, onEdit, onDelete, loading }) => {
                   {column.render ? column.render(row) : row[column.key]}
                 </td>
               ))}
-              <td className="py-3">
-                <div className="flex gap-2">
-                  {onEdit && (
-                    <button
-                      onClick={() => onEdit(row)}
-                      className="text-blue-600 hover:text-blue-800"
-                    >
-                      Edit
-                    </button>
-                  )}
-                  {onDelete && (
-                    <button
-                      onClick={() => onDelete(row)}
-                      className="text-red-600 hover:text-red-800"
-                    >
-                      Delete
-                    </button>
-                  )}
-                </div>
-              </td>
+              {hasActions && (
+                <td className="py-3">
+                  <div className="flex gap-2">
+                    {onEdit && (
+                      <button
+                        onClick={() => onEdit(row)}
+                        className="text-blue-600 hover:text-blue-800"
+                      >
+                        Edit
+                      </button>
+                    )}
+                    {onDelete && (
+                      <button
+                        onClick={() => onDelete(row)}
+                        className="text-red-600 hover:text-red-800"
+                      >
+                        Delete
+                      </button>
+                    )}
+                  </div>
+                </td>
+              )}
             </tr>
           ))}
         </tbody>
