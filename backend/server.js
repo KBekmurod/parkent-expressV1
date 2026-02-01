@@ -102,6 +102,7 @@ server.listen(PORT, () => {
   // Initialize Telegram Bots
   const { initCustomerBot } = require('./src/bots/customer');
   const { initVendorBot } = require('./src/bots/vendor');
+  const { initDriverBot } = require('./src/bots/driver');
   
   const customerBot = initCustomerBot();
   if (customerBot) {
@@ -113,6 +114,12 @@ server.listen(PORT, () => {
   if (vendorBot) {
     logger.info('✅ Vendor Bot started');
     console.log('✅ Vendor Bot started');
+  }
+  
+  const driverBot = initDriverBot();
+  if (driverBot) {
+    logger.info('✅ Driver Bot started');
+    console.log('✅ Driver Bot started');
   }
 });
 
