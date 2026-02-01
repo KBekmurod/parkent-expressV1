@@ -67,7 +67,7 @@ const getOrderStatusText = (status, lang = 'uz') => {
       ready: '✅ Tayyor',
       assigned: '🚗 Haydovchi tayinlandi',
       picked_up: '📦 Olindi',
-      on_the_way: '🛵 Yo'lda',
+      on_the_way: "🛵 Yo'lda",
       delivered: '✅ Yetkazildi',
       cancelled: '❌ Bekor qilindi',
       rejected: '❌ Rad etildi'

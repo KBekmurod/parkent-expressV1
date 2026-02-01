@@ -35,7 +35,7 @@ const getCategoryKeyboard = (language = 'uz') => {
       '🍜 Milliy taomlar',
       '🍰 Shirinliklar',
       '☕ Kafe',
-      '🥗 Sog'lom ovqat'
+      "🥗 Sog'lom ovqat"
     ],
     ru: [
       '🍕 Пицца',
