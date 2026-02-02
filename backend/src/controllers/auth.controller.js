@@ -61,18 +61,24 @@ const register = asyncHandler(async (req, res, next) => {
 /**
  * @desc    Login admin
  * @route   POST /api/v1/auth/login
+ * @route   POST /api/v1/auth/admin/login
  * @access  Public
  */
 const login = asyncHandler(async (req, res, next) => {
-  const { username, password } = req.body;
+  const { email, username, password } = req.body;
 
   // Validate input
-  if (!username || !password) {
-    return next(new AppError('Please provide username and password', 400));
+  if ((!email && !username) || !password) {
+    return next(new AppError('Please provide email or username and password', 400));
   }
 
-  // Find admin
-  const admin = await Admin.findOne({ username }).select('+password');
+  // Find admin by email or username
+  const admin = await Admin.findOne({
+    $or: [
+      { email: email || username },
+      { username: username || email }
+    ]
+  }).select('+password');
 
   if (!admin) {
     return next(new AppError('Invalid credentials', 401));

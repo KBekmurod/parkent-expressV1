@@ -13,6 +13,7 @@ const { authLimiter } = require('../middleware/rateLimit.middleware');
 
 router.post('/register', protect, adminAuth, authorize('super_admin'), validate(adminSchemas.register), register);
 router.post('/login', authLimiter, validate(adminSchemas.login), login);
+router.post('/admin/login', authLimiter, validate(adminSchemas.login), login);
 router.get('/me', protect, adminAuth, getMe);
 router.put('/password', protect, adminAuth, updatePassword);
 

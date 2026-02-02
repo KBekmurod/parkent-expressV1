@@ -189,9 +189,10 @@ const categorySchemas = {
  */
 const adminSchemas = {
   login: Joi.object({
-    username: Joi.string().trim().required(),
+    email: Joi.string().trim().email(),
+    username: Joi.string().trim(),
     password: Joi.string().required()
-  }),
+  }).or('email', 'username'),
   
   register: Joi.object({
     username: Joi.string().trim().lowercase().required(),
