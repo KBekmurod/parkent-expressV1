@@ -72,13 +72,17 @@ const login = asyncHandler(async (req, res, next) => {
     return next(new AppError('Please provide email or username and password', 400));
   }
 
+  // Build query to find admin by email or username
+  const query = { $or: [] };
+  if (email) {
+    query.$or.push({ email });
+  }
+  if (username) {
+    query.$or.push({ username });
+  }
+
   // Find admin by email or username
-  const admin = await Admin.findOne({
-    $or: [
-      { email: email || username },
-      { username: username || email }
-    ]
-  }).select('+password');
+  const admin = await Admin.findOne(query).select('+password');
 
   if (!admin) {
     return next(new AppError('Invalid credentials', 401));
