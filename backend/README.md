@@ -54,6 +54,9 @@ npm start
 
 # Tests
 npm test
+
+# Create initial admin user
+node create-admin.js
 ```
 
 ## 📋 API Endpoints
@@ -63,8 +66,11 @@ See [API.md](./API.md) for complete API reference.
 ### Key Endpoints
 
 **Authentication:**
-- `POST /api/v1/auth/register` - Register user
-- `POST /api/v1/auth/login` - Login
+- `POST /api/v1/auth/register` - Register admin (super_admin only)
+- `POST /api/v1/auth/login` - Admin login (email or username)
+- `POST /api/v1/auth/admin/login` - Admin login (email or username)
+- `GET /api/v1/auth/me` - Get current admin profile
+- `PUT /api/v1/auth/password` - Update password
 
 **Vendors:**
 - `GET /api/v1/vendors` - List vendors
@@ -79,6 +85,44 @@ See [API.md](./API.md) for complete API reference.
 - `GET /api/v1/orders/:id/track` - Track order
 
 ## 🔐 Authentication
+
+Admin authentication supports login with either email or username.
+
+### Creating Initial Admin
+
+Before first use, create an admin user:
+
+```bash
+node create-admin.js
+```
+
+This creates a super_admin with these credentials:
+- **Username:** admin
+- **Email:** admin@parkentexpress.com
+- **Password:** admin123456
+- **Role:** super_admin
+
+⚠️ **Important:** Change the password immediately after first login!
+
+### Login Examples
+
+Login with email:
+```json
+POST /api/v1/auth/admin/login
+{
+  "email": "admin@parkentexpress.com",
+  "password": "admin123456"
+}
+```
+
+Login with username:
+```json
+POST /api/v1/auth/admin/login
+{
+  "username": "admin",
+  "password": "admin123456"
+}
+```
 
 All protected routes require JWT token in header:
 ```
