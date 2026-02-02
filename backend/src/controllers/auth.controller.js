@@ -73,16 +73,16 @@ const login = asyncHandler(async (req, res, next) => {
   }
 
   // Build query to find admin by email or username
-  const query = { $or: [] };
+  const queryConditions = [];
   if (email) {
-    query.$or.push({ email });
+    queryConditions.push({ email });
   }
   if (username) {
-    query.$or.push({ username });
+    queryConditions.push({ username });
   }
 
   // Find admin by email or username
-  const admin = await Admin.findOne(query).select('+password');
+  const admin = await Admin.findOne({ $or: queryConditions }).select('+password');
 
   if (!admin) {
     return next(new AppError('Invalid credentials', 401));
