@@ -7,7 +7,7 @@ export const authService = {
   },
 
   getProfile: async () => {
-    const response = await api.get('/auth/admin/profile')
+    const response = await api.get('/auth/me')
     return response
   },
 
