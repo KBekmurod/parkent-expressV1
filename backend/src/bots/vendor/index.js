@@ -54,6 +54,8 @@ const initVendorBot = () => {
         startHandler.handleLocationMessage(vendorBot, msg);
       } else if (msg.photo) {
         menuHandler.handlePhotoMessage(vendorBot, msg);
+      } else if (msg.document) {
+        menuHandler.handleDocumentMessage(vendorBot, msg);
       } else if (msg.text && !msg.text.startsWith('/')) {
         // Check if in registration flow
         if (global.vendorRegistrations?.has(chatId)) {

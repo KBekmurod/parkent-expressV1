@@ -1,6 +1,8 @@
 const axios = require('axios');
 const path = require('path');
 const fs = require('fs').promises;
+const fsSync = require('fs');
+const FormData = require('form-data');
 const { MESSAGES } = require('../utils/messages');
 const { getProductMenuKeyboard, getProductActionKeyboard, getProductPaginationKeyboard, getSkipKeyboard } = require('../keyboards/productMenu');
 const { formatPrice, truncateText } = require('../utils/helpers');
@@ -285,36 +287,159 @@ const handleProductCreationStep = async (bot, msg, state) => {
 };
 
 /**
- * Handle photo message during product creation
+ * Handle photo upload during product creation or editing
+ * @param {TelegramBot} bot - Bot instance
+ * @param {Object} msg - Message object with photo
  */
 const handlePhotoMessage = async (bot, msg) => {
   const chatId = msg.chat.id;
-  const state = global.productCreationStates.get(chatId);
-
-  if (!state || state.step !== 'photo') {
-    return;
-  }
-
+  
   try {
-    // Get the largest photo
-    const photos = msg.photo;
-    const photo = photos[photos.length - 1];
+    // Check if user is in product creation flow
+    const createState = global.productCreationStates?.get(chatId);
+    const editState = global.productEditStates?.get(chatId);
     
-    // Download photo
-    const file = await bot.getFile(photo.file_id);
-    const fileUrl = `https://api.telegram.org/file/bot${process.env.VENDOR_BOT_TOKEN}/${file.file_path}`;
-    
-    state.data.photoUrl = fileUrl;
-    state.data.photoFileId = photo.file_id;
-    global.productCreationStates.set(chatId, state);
+    if (!createState && !editState) {
+      // Not in photo upload flow, ignore
+      return;
+    }
 
-    await bot.sendMessage(chatId, MESSAGES.uz.photoReceived);
+    // Get the highest resolution photo
+    const photo = msg.photo[msg.photo.length - 1];
+    const fileId = photo.file_id;
+
+    // Download file from Telegram
+    const file = await bot.getFile(fileId);
+    const fileLink = await bot.getFileLink(fileId);
     
-    // Complete product creation
-    await completeProductCreation(bot, chatId, state);
+    // Extract file extension from file path
+    const fileExt = path.extname(file.file_path) || '.jpg';
+
+    // Download photo
+    const response = await axios.get(fileLink, { responseType: 'stream' });
+    const tempPath = path.join(__dirname, '../../../uploads/temp', `${fileId}${fileExt}`);
+    
+    // Ensure temp directory exists
+    const tempDir = path.dirname(tempPath);
+    if (!fsSync.existsSync(tempDir)) {
+      fsSync.mkdirSync(tempDir, { recursive: true });
+    }
+
+    const writer = fsSync.createWriteStream(tempPath);
+    response.data.pipe(writer);
+
+    await new Promise((resolve, reject) => {
+      writer.on('finish', resolve);
+      writer.on('error', reject);
+    });
+
+    if (createState && createState.step === 'photo') {
+      // Product creation flow
+      await bot.sendMessage(chatId, '⏳ Rasm yuklanmoqda...');
+
+      // Create product first without photo
+      const productData = {
+        vendor: createState.vendorId,
+        name: createState.data.name,
+        price: createState.data.price,
+        category: createState.data.category,
+        preparationTime: createState.data.preparationTime
+      };
+      
+      // Only add description if it exists
+      if (createState.data.description) {
+        productData.description = createState.data.description;
+      }
+
+      const productResponse = await axios.post(`${API_URL}/products`, productData);
+      const productId = productResponse.data.data.product._id;
+
+      // Upload photo
+      const formData = new FormData();
+      formData.append('photo', fsSync.createReadStream(tempPath));
+
+      await axios.post(`${API_URL}/products/${productId}/photo`, formData, {
+        headers: formData.getHeaders()
+      });
+
+      // Clean up temp file
+      fsSync.unlinkSync(tempPath);
+
+      // Clear state
+      global.productCreationStates.delete(chatId);
+
+      await bot.sendMessage(
+        chatId,
+        '✅ Mahsulot muvaffaqiyatli qo\'shildi!\n\n' +
+        'Admin tomonidan tasdiqlanganidan keyin ko\'rinadi.',
+        {
+          reply_markup: {
+            keyboard: [
+              ['📋 Menyuni ko\'rish', '➕ Mahsulot qo\'shish'],
+              ['📦 Buyurtmalar', '📊 Statistika'],
+              ['👤 Profil', '⚙️ Sozlamalar']
+            ],
+            resize_keyboard: true
+          }
+        }
+      );
+
+      logger.info(`Product created with photo by vendor ${createState.vendorId}`);
+      
+    } else if (editState && editState.step === 'photo') {
+      // Product edit flow - upload new photo
+      await bot.sendMessage(chatId, '⏳ Rasm yangilanmoqda...');
+
+      const formData = new FormData();
+      formData.append('photo', fsSync.createReadStream(tempPath));
+
+      await axios.post(`${API_URL}/products/${editState.productId}/photo`, formData, {
+        headers: formData.getHeaders()
+      });
+
+      // Clean up
+      fsSync.unlinkSync(tempPath);
+      global.productEditStates.delete(chatId);
+
+      await bot.sendMessage(chatId, '✅ Rasm yangilandi!');
+      logger.info(`Product photo updated: ${editState.productId}`);
+    }
+
   } catch (error) {
-    logger.error('Error handling photo:', error);
-    await bot.sendMessage(chatId, MESSAGES.uz.error);
+    logger.error('Error handling photo message:', error);
+    
+    // Clean up temp file if exists
+    try {
+      const fileId = msg.photo[msg.photo.length - 1].file_id;
+      const file = await bot.getFile(fileId);
+      const fileExt = path.extname(file.file_path) || '.jpg';
+      const tempPath = path.join(__dirname, '../../../uploads/temp', `${fileId}${fileExt}`);
+      if (fsSync.existsSync(tempPath)) {
+        fsSync.unlinkSync(tempPath);
+        logger.debug(`Cleaned up temp file: ${tempPath}`);
+      }
+    } catch (cleanupError) {
+      logger.warn('Error cleaning up temp file:', cleanupError);
+    }
+
+    await bot.sendMessage(
+      chatId,
+      '❌ Rasm yuklashda xatolik yuz berdi. Qaytadan urinib ko\'ring.',
+      {
+        reply_markup: {
+          keyboard: [
+            ['📋 Menyuni ko\'rish', '➕ Mahsulot qo\'shish'],
+            ['📦 Buyurtmalar', '📊 Statistika'],
+            ['👤 Profil', '⚙️ Sozlamalar']
+          ],
+          resize_keyboard: true
+        }
+      }
+    );
+
+    // Clear states
+    global.productCreationStates?.delete(chatId);
+    global.productEditStates?.delete(chatId);
   }
 };
 
@@ -438,10 +563,40 @@ const toggleProduct = async (bot, chatId, messageId, productId) => {
   }
 };
 
+/**
+ * Handle document upload (same as photo, for drag & drop files)
+ * @param {TelegramBot} bot - Bot instance
+ * @param {Object} msg - Message object with document
+ */
+const handleDocumentMessage = async (bot, msg) => {
+  const chatId = msg.chat.id;
+  
+  try {
+    // Check if document is an image
+    if (msg.document && msg.document.mime_type && msg.document.mime_type.startsWith('image/')) {
+      // Create a new message object with photo property for handlePhotoMessage
+      const photoMsg = {
+        ...msg,
+        photo: [{ file_id: msg.document.file_id }]
+      };
+      await handlePhotoMessage(bot, photoMsg);
+    } else {
+      await bot.sendMessage(
+        chatId,
+        '❌ Faqat rasm fayllari qabul qilinadi (JPG, PNG)'
+      );
+    }
+  } catch (error) {
+    logger.error('Error handling document message:', error);
+    await bot.sendMessage(chatId, MESSAGES.uz.error);
+  }
+};
+
 module.exports = {
   showMenu,
   handleMenuCallback,
   handleProductCallback,
   handleTextMessage,
-  handlePhotoMessage
+  handlePhotoMessage,
+  handleDocumentMessage
 };
