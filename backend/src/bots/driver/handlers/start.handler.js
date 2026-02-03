@@ -278,7 +278,7 @@ const completeRegistration = async (bot, chatId, regState) => {
       lastName: regState.lastName,
       username: regState.username,
       phone: regState.phone,
-      vehicleType: regState.vehicleType,
+      vehicle: regState.vehicleType,
       vehicleModel: regState.vehicleModel,
       plateNumber: regState.plateNumber,
       licensePhoto: regState.licensePhoto,

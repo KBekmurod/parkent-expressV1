@@ -10,7 +10,19 @@ const logger = require('../utils/logger');
  * @access  Public (Telegram bot)
  */
 const registerDriver = asyncHandler(async (req, res, next) => {
-  const { telegramId, firstName, lastName, phone, vehicle } = req.body;
+  const { 
+    telegramId, 
+    firstName, 
+    lastName, 
+    username,
+    phone, 
+    vehicle,
+    vehicleModel,
+    plateNumber,
+    licensePhoto,
+    vehiclePhoto,
+    status 
+  } = req.body;
 
   // Check if driver exists
   const existingDriver = await Driver.findOne({ telegramId });
@@ -23,9 +35,14 @@ const registerDriver = asyncHandler(async (req, res, next) => {
     telegramId,
     firstName,
     lastName,
+    username,
     phone,
     vehicle,
-    status: 'pending'
+    vehicleModel,
+    plateNumber,
+    licensePhoto,
+    vehiclePhoto,
+    status: status || 'pending'
   });
 
   logger.info(`New driver registered: ${firstName} ${lastName}`);

@@ -16,6 +16,10 @@ const driverSchema = new mongoose.Schema({
     type: String,
     trim: true
   },
+  username: {
+    type: String,
+    trim: true
+  },
   phone: {
     type: String,
     required: true,
@@ -25,6 +29,25 @@ const driverSchema = new mongoose.Schema({
     type: String,
     enum: ['bicycle', 'motorcycle', 'car'],
     required: true
+  },
+  vehicleModel: {
+    type: String,
+    trim: true,
+    default: ''
+  },
+  plateNumber: {
+    type: String,
+    trim: true,
+    uppercase: true,
+    default: ''
+  },
+  licensePhoto: {
+    type: String,
+    default: ''
+  },
+  vehiclePhoto: {
+    type: String,
+    default: ''
   },
   documentPhoto: {
     type: String,
