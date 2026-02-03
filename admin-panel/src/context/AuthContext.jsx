@@ -12,7 +12,7 @@ export const AuthProvider = ({ children }) => {
     if (token) {
       // Verify token and get user
       authService.getProfile()
-        .then(data => setUser(data.user))
+        .then(response => setUser(response.data.admin))
         .catch(() => localStorage.removeItem('token'))
         .finally(() => setLoading(false))
     } else {
@@ -21,9 +21,9 @@ export const AuthProvider = ({ children }) => {
   }, [])
 
   const login = async (email, password) => {
-    const data = await authService.login(email, password)
-    setUser(data.admin)
-    localStorage.setItem('token', data.token)
+    const response = await authService.login(email, password)
+    setUser(response.data.admin)
+    localStorage.setItem('token', response.data.token)
   }
 
   const logout = () => {
