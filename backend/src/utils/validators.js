@@ -65,8 +65,14 @@ const driverSchemas = {
     telegramId: Joi.string().required(),
     firstName: Joi.string().trim().required(),
     lastName: Joi.string().trim().allow(''),
+    username: Joi.string().trim().allow(''),
     phone: Joi.string().trim().required(),
-    vehicle: Joi.string().valid('bicycle', 'motorcycle', 'car').required()
+    vehicle: Joi.string().valid('bicycle', 'motorcycle', 'car').required(),
+    vehicleModel: Joi.string().trim().allow(''),
+    plateNumber: Joi.string().trim().allow(''),
+    licensePhoto: Joi.string().allow(''),
+    vehiclePhoto: Joi.string().allow(''),
+    status: Joi.string().valid('pending', 'active', 'blocked').default('pending')
   }),
   
   updateLocation: Joi.object({
