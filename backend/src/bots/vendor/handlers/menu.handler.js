@@ -309,11 +309,15 @@ const handlePhotoMessage = async (bot, msg) => {
     const fileId = photo.file_id;
 
     // Download file from Telegram
+    const file = await bot.getFile(fileId);
     const fileLink = await bot.getFileLink(fileId);
+    
+    // Extract file extension from file path
+    const fileExt = path.extname(file.file_path) || '.jpg';
 
     // Download photo
     const response = await axios.get(fileLink, { responseType: 'stream' });
-    const tempPath = path.join(__dirname, '../../../uploads/temp', `${fileId}.jpg`);
+    const tempPath = path.join(__dirname, '../../../uploads/temp', `${fileId}${fileExt}`);
     
     // Ensure temp directory exists
     const tempDir = path.dirname(tempPath);
@@ -337,11 +341,15 @@ const handlePhotoMessage = async (bot, msg) => {
       const productData = {
         vendor: createState.vendorId,
         name: createState.data.name,
-        description: createState.data.description || {},
         price: createState.data.price,
         category: createState.data.category,
         preparationTime: createState.data.preparationTime
       };
+      
+      // Only add description if it exists
+      if (createState.data.description) {
+        productData.description = createState.data.description;
+      }
 
       const productResponse = await axios.post(`${API_URL}/products`, productData);
       const productId = productResponse.data.data.product._id;
@@ -403,12 +411,15 @@ const handlePhotoMessage = async (bot, msg) => {
     // Clean up temp file if exists
     try {
       const fileId = msg.photo[msg.photo.length - 1].file_id;
-      const tempPath = path.join(__dirname, '../../../uploads/temp', `${fileId}.jpg`);
+      const file = await bot.getFile(fileId);
+      const fileExt = path.extname(file.file_path) || '.jpg';
+      const tempPath = path.join(__dirname, '../../../uploads/temp', `${fileId}${fileExt}`);
       if (fsSync.existsSync(tempPath)) {
         fsSync.unlinkSync(tempPath);
+        logger.debug(`Cleaned up temp file: ${tempPath}`);
       }
     } catch (cleanupError) {
-      // Ignore cleanup errors
+      logger.warn('Error cleaning up temp file:', cleanupError);
     }
 
     await bot.sendMessage(
@@ -563,9 +574,12 @@ const handleDocumentMessage = async (bot, msg) => {
   try {
     // Check if document is an image
     if (msg.document && msg.document.mime_type && msg.document.mime_type.startsWith('image/')) {
-      // Treat as photo
-      msg.photo = [{ file_id: msg.document.file_id }];
-      await handlePhotoMessage(bot, msg);
+      // Create a new message object with photo property for handlePhotoMessage
+      const photoMsg = {
+        ...msg,
+        photo: [{ file_id: msg.document.file_id }]
+      };
+      await handlePhotoMessage(bot, photoMsg);
     } else {
       await bot.sendMessage(
         chatId,

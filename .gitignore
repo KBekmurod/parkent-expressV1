@@ -16,9 +16,11 @@ logs/
 uploads/menus/*
 uploads/logos/*
 uploads/documents/*
+uploads/temp/*
 !uploads/menus/.gitkeep
 !uploads/logos/.gitkeep
 !uploads/documents/.gitkeep
+!uploads/temp/.gitkeep
 
 # OS
 .DS_Store
