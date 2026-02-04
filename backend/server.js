@@ -121,6 +121,11 @@ server.listen(PORT, () => {
   if (driverBot) {
     logger.info('✅ Driver Bot started');
     console.log('✅ Driver Bot started');
+    
+    // Initialize settlement reminder cron job
+    const settlementReminderJob = require('./src/jobs/settlementReminder.job');
+    settlementReminderJob.initializeBot(driverBot);
+    settlementReminderJob.startSettlementReminder();
   }
 });
 
