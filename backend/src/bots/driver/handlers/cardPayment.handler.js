@@ -166,6 +166,24 @@ const handleReceiptUpload = async (bot, msg) => {
 
     logger.info(`Receipt uploaded for payment ${payment._id} by driver ${driver._id}`);
 
+    // Trigger customer confirmation after 1 minute
+    const { requestCustomerConfirmation } = require('../../../services/paymentConfirmation.service');
+    const { getCustomerBot } = require('../../customer');
+    
+    setTimeout(async () => {
+      try {
+        const customerBot = getCustomerBot();
+        const orderResponse = await axios.get(`${API_URL}/orders/${payment.orderId}`);
+        const customer = orderResponse.data.data.order.customer;
+        
+        if (customer && customer.telegramId) {
+          await requestCustomerConfirmation(payment.orderId, customer.telegramId, customerBot);
+        }
+      } catch (error) {
+        logger.error('Error triggering customer confirmation:', error);
+      }
+    }, 60000); // 60 seconds delay
+
   } catch (error) {
     logger.error('Error handling receipt upload:', error);
     await bot.sendMessage(chatId, CARD_PAYMENT_MESSAGES.uz.uploadError);

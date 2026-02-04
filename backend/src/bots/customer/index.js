@@ -10,6 +10,7 @@ const orderHandler = require('./handlers/order.handler');
 const addressHandler = require('./handlers/address.handler');
 const profileHandler = require('./handlers/profile.handler');
 const paymentHandler = require('./handlers/payment.handler');
+const confirmationHandler = require('./handlers/confirmation.handler');
 
 let customerBot;
 
@@ -50,6 +51,8 @@ const initCustomerBot = () => {
         profileHandler.handleProfileCallback(customerBot, callbackQuery);
       } else if (data.startsWith('payment:')) {
         paymentHandler.handlePaymentMethodCallback(customerBot, callbackQuery);
+      } else if (data.startsWith('confirm:')) {
+        confirmationHandler.handleConfirmationCallback(customerBot, callbackQuery);
       }
     });
 
@@ -98,5 +101,6 @@ const getCustomerBot = () => {
 
 module.exports = {
   initCustomerBot,
-  getCustomerBot
+  getCustomerBot,
+  customerBot
 };

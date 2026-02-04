@@ -10,16 +10,18 @@ const getMainMenuKeyboard = (isOnline, language = 'uz') => {
     uz: {
       keyboard: [
         [{ text: '📦 Faol buyurtmalar' }, { text: '📋 Tarix' }],
-        [{ text: '💰 Daromad' }, statusButton],
-        [{ text: '👤 Profil' }, { text: '⚙️ Sozlamalar' }]
+        [{ text: '💰 Daromad' }, { text: '💰 Mening hisobim' }],
+        [statusButton, { text: '👤 Profil' }],
+        [{ text: '⚙️ Sozlamalar' }]
       ],
       resize_keyboard: true
     },
     ru: {
       keyboard: [
         [{ text: '📦 Активные заказы' }, { text: '📋 История' }],
-        [{ text: '💰 Доход' }, statusButton],
-        [{ text: '👤 Профиль' }, { text: '⚙️ Настройки' }]
+        [{ text: '💰 Доход' }, { text: '💰 Мой счет' }],
+        [statusButton, { text: '👤 Профиль' }],
+        [{ text: '⚙️ Настройки' }]
       ],
       resize_keyboard: true
     }

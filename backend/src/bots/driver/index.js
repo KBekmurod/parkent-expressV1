@@ -9,6 +9,7 @@ const locationHandler = require('./handlers/location.handler');
 const earningsHandler = require('./handlers/earnings.handler');
 const profileHandler = require('./handlers/profile.handler');
 const cardPaymentHandler = require('./handlers/cardPayment.handler');
+const settlementHandler = require('./handlers/settlement.handler');
 
 let driverBot;
 
@@ -43,6 +44,8 @@ const initDriverBot = () => {
         profileHandler.handleProfileCallback(driverBot, callbackQuery);
       } else if (data.startsWith('vehicle:')) {
         startHandler.handleVehicleTypeCallback(driverBot, callbackQuery);
+      } else if (data.startsWith('settlement:')) {
+        settlementHandler.handleSettlementCallback(driverBot, callbackQuery);
       }
     });
 
@@ -115,6 +118,8 @@ const handleTextCommand = async (bot, msg) => {
       await ordersHandler.showOrderHistory(bot, chatId, driver._id);
     } else if (text === '💰 Daromad' || text === '💰 Доход') {
       await earningsHandler.showEarnings(bot, chatId, driver._id);
+    } else if (text === '💰 Mening hisobim' || text === '💰 Мой счет') {
+      await settlementHandler.showDailyCollections(bot, chatId, driver._id);
     } else if (text === '🔄 Online' || text === '🔄 Онлайн') {
       await profileHandler.toggleOnlineStatus(bot, chatId, driver._id, true);
     } else if (text === '⏸️ Offline' || text === '⏸️ Оффлайн') {
@@ -141,5 +146,6 @@ const getDriverBot = () => {
 
 module.exports = {
   initDriverBot,
-  getDriverBot
+  getDriverBot,
+  driverBot
 };

@@ -38,6 +38,10 @@ const cardPaymentSchema = new mongoose.Schema({
     default: false
   },
   customerConfirmedAt: Date,
+  confirmationRequestedAt: Date,
+  customerResponse: String,
+  driverConfirmedSettlement: Boolean,
+  driverConfirmedAt: Date,
   adminVerified: {
     type: Boolean,
     default: false
