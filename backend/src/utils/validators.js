@@ -240,6 +240,26 @@ const transactionSchemas = {
   })
 };
 
+/**
+ * Card Payment validation schemas
+ */
+const cardPaymentSchemas = {
+  create: Joi.object({
+    orderId: Joi.string().pattern(/^[0-9a-fA-F]{24}$/).required(),
+    driverId: Joi.string().pattern(/^[0-9a-fA-F]{24}$/).required(),
+    customerId: Joi.string().pattern(/^[0-9a-fA-F]{24}$/).required(),
+    amount: Joi.number().min(0).required()
+  }),
+  
+  verify: Joi.object({
+    notes: Joi.string().trim().allow('')
+  }),
+
+  reject: Joi.object({
+    reason: Joi.string().trim().required()
+  })
+};
+
 module.exports = {
   userSchemas,
   vendorSchemas,
@@ -249,5 +269,6 @@ module.exports = {
   reviewSchemas,
   adminSchemas,
   categorySchemas,
-  transactionSchemas
+  transactionSchemas,
+  cardPaymentSchemas
 };
