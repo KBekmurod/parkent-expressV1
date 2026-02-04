@@ -22,7 +22,7 @@ const CardPaymentsPage = () => {
       if (filter === 'verified') params.verified = 'true';
       
       const response = await api.get('/card-payments', { params });
-      setPayments(response.data.payments || []);
+      setPayments(response.data?.data?.payments || []);
     } catch (error) {
       console.error('Error fetching payments:', error);
       toast.error('Failed to load payments');
@@ -43,11 +43,15 @@ const CardPaymentsPage = () => {
   };
 
   const handleReject = async (paymentId) => {
-    const reason = prompt('Enter rejection reason:');
-    if (!reason) return;
+    // Using window.prompt for simplicity, in production consider a modal form
+    const reason = window.prompt('Enter rejection reason:');
+    if (!reason || reason.trim() === '') {
+      toast.error('Rejection reason is required');
+      return;
+    }
     
     try {
-      await api.put(`/card-payments/${paymentId}/reject`, { reason });
+      await api.put(`/card-payments/${paymentId}/reject`, { reason: reason.trim() });
       toast.success('Payment rejected');
       fetchPayments();
     } catch (error) {

@@ -28,15 +28,17 @@ const getDriverPendingSettlement = async (driverId) => {
 };
 
 const driverConfirmSettlement = async (driverId) => {
-  const payments = await CardPayment.find({ driverId, settlementStatus: 'pending' });
-  
-  for (const payment of payments) {
-    payment.driverConfirmedSettlement = true;
-    payment.driverConfirmedAt = new Date();
-    await payment.save();
-  }
+  const result = await CardPayment.updateMany(
+    { driverId, settlementStatus: 'pending' },
+    {
+      $set: {
+        driverConfirmedSettlement: true,
+        driverConfirmedAt: new Date()
+      }
+    }
+  );
 
-  return { success: true, count: payments.length };
+  return { success: true, count: result.modifiedCount };
 };
 
 module.exports = { calculateDailyCollection, getDriverPendingSettlement, driverConfirmSettlement };

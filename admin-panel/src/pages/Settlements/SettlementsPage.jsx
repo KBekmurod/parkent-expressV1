@@ -16,7 +16,7 @@ const SettlementsPage = () => {
     try {
       setLoading(true);
       const response = await api.get('/card-payments/settlements/pending');
-      setSettlements(response.data.settlements || []);
+      setSettlements(response.data?.data?.settlements || []);
     } catch (error) {
       console.error('Error fetching settlements:', error);
       toast.error('Failed to load settlements');
@@ -26,7 +26,8 @@ const SettlementsPage = () => {
   };
 
   const handleSettle = async (driverId, driverName) => {
-    if (!confirm(`Settle all payments for ${driverName}?`)) return;
+    // Using window.confirm for simplicity, in production consider a modal
+    if (!window.confirm(`Settle all payments for ${driverName}?`)) return;
     
     try {
       const driver = settlements.find(s => s.driver._id === driverId);

@@ -1,4 +1,6 @@
 const { calculateDailyCollection, getDriverPendingSettlement, driverConfirmSettlement } = require('../../../services/settlement.service');
+const axios = require('axios');
+const API_URL = process.env.API_URL || 'http://localhost:5000/api/v1';
 
 const showDailyCollections = async (bot, chatId, driverId) => {
   const today = await calculateDailyCollection(driverId);
@@ -25,9 +27,6 @@ const handleSettlementCallback = async (bot, callbackQuery) => {
   const data = callbackQuery.data;
   
   await bot.answerCallbackQuery(callbackQuery.id);
-
-  const axios = require('axios');
-  const API_URL = process.env.API_URL || 'http://localhost:5000/api/v1';
   
   if (data === 'settlement:confirm') {
     const response = await axios.get(`${API_URL}/drivers/telegram/${chatId}`);
