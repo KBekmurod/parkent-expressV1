@@ -1,6 +1,8 @@
 const axios = require('axios');
 const { MESSAGES } = require('../utils/messages');
 const logger = require('../../../utils/logger');
+const orderHandler = require('./order.handler');
+const paymentHandler = require('./payment.handler');
 
 const API_URL = process.env.API_URL || 'http://localhost:5000/api/v1';
 
@@ -96,8 +98,6 @@ const handleAddressCallback = async (bot, callbackQuery) => {
     const address = user.addresses[addressIndex];
 
     // Proceed to order creation with selected payment method
-    const orderHandler = require('./order.handler');
-    const paymentHandler = require('./payment.handler');
     const paymentMethod = paymentHandler.getPaymentMethod(chatId);
     await orderHandler.createOrder(bot, chatId, user._id, address, paymentMethod);
     

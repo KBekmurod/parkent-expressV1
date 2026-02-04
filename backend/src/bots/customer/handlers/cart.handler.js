@@ -1,6 +1,7 @@
 const axios = require('axios');
 const { MESSAGES } = require('../utils/messages');
 const logger = require('../../../utils/logger');
+const paymentHandler = require('./payment.handler');
 
 const API_URL = process.env.API_URL || 'http://localhost:5000/api/v1';
 
@@ -88,7 +89,6 @@ const handleCartCallback = async (bot, callbackQuery) => {
     await bot.answerCallbackQuery(callbackQuery.id);
     
     // Show payment method selection first
-    const paymentHandler = require('./payment.handler');
     await paymentHandler.showPaymentMethods(bot, chatId);
   }
 };

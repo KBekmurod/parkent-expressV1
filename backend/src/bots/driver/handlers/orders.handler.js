@@ -3,6 +3,7 @@ const { MESSAGES } = require('../utils/messages');
 const { getOrderActionKeyboard, getRejectReasonKeyboard } = require('../keyboards/orderMenu');
 const { formatPrice, formatDateTime, getOrderStatusText } = require('../utils/helpers');
 const logger = require('../../../utils/logger');
+const cardPaymentHandler = require('./cardPayment.handler');
 
 const API_URL = process.env.API_URL || 'http://localhost:5000/api/v1';
 
@@ -116,13 +117,10 @@ const sendOrderDetails = async (bot, chatId, order, language = 'uz') => {
     
     // If card payment, show card info
     if (order.paymentMethod === 'card_to_driver') {
-      const cardPaymentHandler = require('./cardPayment.handler');
       const telegramId = chatId.toString();
       
       try {
         // Get driver info with cardNumber field (it has select: false in schema)
-        const axios = require('axios');
-        const API_URL = process.env.API_URL || 'http://localhost:5000/api/v1';
         const driverResponse = await axios.get(`${API_URL}/drivers/telegram/${telegramId}`);
         let driver = driverResponse.data.data.driver;
         
