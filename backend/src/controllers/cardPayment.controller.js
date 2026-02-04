@@ -267,6 +267,47 @@ const getCardPaymentById = asyncHandler(async (req, res, next) => {
   });
 });
 
+/**
+ * @desc    Get all card payments (Admin)
+ * @route   GET /api/v1/card-payments
+ * @access  Private/Admin
+ */
+const getAllCardPayments = asyncHandler(async (req, res, next) => {
+  const { page = 1, limit = 50, status, verified } = req.query;
+  
+  let query = {};
+  
+  if (status) {
+    query.settlementStatus = status;
+  }
+  
+  if (verified === 'true') {
+    query.adminVerified = true;
+  } else if (verified === 'false') {
+    query.adminVerified = false;
+  }
+  
+  const payments = await CardPayment.find(query)
+    .populate('orderId', 'orderNumber total')
+    .populate('driverId', 'firstName lastName phone')
+    .populate('customerId', 'firstName lastName phone')
+    .sort({ createdAt: -1 })
+    .limit(limit * 1)
+    .skip((page - 1) * limit);
+  
+  const count = await CardPayment.countDocuments(query);
+  
+  res.status(200).json({
+    success: true,
+    count,
+    data: {
+      payments,
+      totalPages: Math.ceil(count / limit),
+      currentPage: page
+    }
+  });
+});
+
 module.exports = {
   createCardPayment,
   uploadReceipt,
@@ -275,5 +316,6 @@ module.exports = {
   getDriverPayments,
   getPendingSettlements,
   markAsSettled,
-  getCardPaymentById
+  getCardPaymentById,
+  getAllCardPayments
 };

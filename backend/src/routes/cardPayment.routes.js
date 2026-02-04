@@ -8,7 +8,8 @@ const {
   getDriverPayments,
   getPendingSettlements,
   markAsSettled,
-  getCardPaymentById
+  getCardPaymentById,
+  getAllCardPayments
 } = require('../controllers/cardPayment.controller');
 const { protect, adminAuth } = require('../middleware/auth.middleware');
 const { receiptUpload } = require('../middleware/receiptUpload.middleware');
@@ -18,10 +19,11 @@ const { uploadLimiter } = require('../middleware/rateLimit.middleware');
 router.post('/', createCardPayment);
 router.post('/:id/receipt', uploadLimiter, receiptUpload, uploadReceipt);
 router.get('/driver/:driverId', getDriverPayments);
-router.get('/:id', getCardPaymentById);
 
 // Admin routes
 router.get('/settlements/pending', protect, adminAuth, getPendingSettlements);
+router.get('/', protect, adminAuth, getAllCardPayments);
+router.get('/:id', getCardPaymentById);
 router.put('/:id/verify', protect, adminAuth, verifyPayment);
 router.put('/:id/reject', protect, adminAuth, rejectPayment);
 router.put('/:id/settle', protect, adminAuth, markAsSettled);
