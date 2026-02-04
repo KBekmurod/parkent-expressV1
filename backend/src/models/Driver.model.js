@@ -89,7 +89,34 @@ const driverSchema = new mongoose.Schema({
   balance: {
     type: Number,
     default: 0
-  }
+  },
+  cardNumber: {
+    type: String,
+    trim: true,
+    select: false  // Security: don't include by default in queries
+  },
+  cardHolderName: {
+    type: String,
+    trim: true
+  },
+  bankName: {
+    type: String,
+    trim: true
+  },
+  depositAmount: {
+    type: Number,
+    default: 0
+  },
+  depositStatus: {
+    type: String,
+    enum: ['none', 'pending', 'active', 'refunded'],
+    default: 'none'
+  },
+  totalCardCollections: {  // Analytics: total amount collected via cards
+    type: Number,
+    default: 0
+  },
+  lastSettlementDate: Date
 }, {
   timestamps: true
 });
