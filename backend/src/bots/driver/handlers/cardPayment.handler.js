@@ -71,6 +71,8 @@ const handleReceiptUpload = async (bot, msg) => {
     return await bot.sendMessage(chatId, CARD_PAYMENT_MESSAGES.uz.uploadError);
   }
 
+  let tempPath = null;
+
   try {
     // Get the largest photo (best quality)
     const fileId = photo[photo.length - 1].file_id;
@@ -84,7 +86,7 @@ const handleReceiptUpload = async (bot, msg) => {
     const response = await axios.get(fileUrl, { responseType: 'stream' });
     
     // Save temporarily
-    const tempPath = `./uploads/temp/receipt-${Date.now()}.jpg`;
+    tempPath = `./uploads/temp/receipt-${Date.now()}.jpg`;
     
     // Ensure directory exists
     const tempDir = './uploads/temp';
@@ -115,7 +117,6 @@ const handleReceiptUpload = async (bot, msg) => {
     const pendingPayments = paymentsResponse.data.data.payments;
     
     if (pendingPayments.length === 0) {
-      fs.unlinkSync(tempPath); // Delete temp file
       return await bot.sendMessage(
         chatId,
         'Sizda chek yuklash uchun kutilayotgan karta to\'lovlar yo\'q.'
@@ -137,15 +138,29 @@ const handleReceiptUpload = async (bot, msg) => {
       }
     );
 
-    // Delete temp file
-    fs.unlinkSync(tempPath);
+    // Fetch order number if needed (orderId might be just an ID string)
+    let orderNumber = '';
+    if (payment.orderId) {
+      if (typeof payment.orderId === 'object' && payment.orderId.orderNumber) {
+        orderNumber = payment.orderId.orderNumber;
+      } else {
+        // orderId is just a string ID, fetch the order if needed
+        try {
+          const orderResponse = await axios.get(`${API_URL}/orders/${payment.orderId}`);
+          orderNumber = orderResponse.data.data.order.orderNumber;
+        } catch (err) {
+          logger.warn('Could not fetch order number:', err.message);
+          orderNumber = payment.orderId.toString().substring(0, 8);
+        }
+      }
+    }
 
     // Success message
     await bot.sendMessage(
       chatId,
       CARD_PAYMENT_MESSAGES.uz.receiptReceived
         .replace('{amount}', payment.amount.toLocaleString())
-        .replace('{orderNumber}', payment.orderId.orderNumber || ''),
+        .replace('{orderNumber}', orderNumber),
       { parse_mode: 'Markdown' }
     );
 
@@ -154,6 +169,15 @@ const handleReceiptUpload = async (bot, msg) => {
   } catch (error) {
     logger.error('Error handling receipt upload:', error);
     await bot.sendMessage(chatId, CARD_PAYMENT_MESSAGES.uz.uploadError);
+  } finally {
+    // Clean up temporary file
+    if (tempPath && fs.existsSync(tempPath)) {
+      try {
+        fs.unlinkSync(tempPath);
+      } catch (cleanupError) {
+        logger.error('Error cleaning up temp file:', cleanupError);
+      }
+    }
   }
 };
 

@@ -4,6 +4,10 @@ const addressHandler = require('./address.handler');
 const logger = require('../../../utils/logger');
 
 // Temporary storage for payment method selection (per chat)
+// NOTE: This is an in-memory Map and will lose data on bot restart.
+// For production with multiple bot instances or high reliability needs,
+// consider using Redis or passing payment method via callback_data instead.
+// Current approach is acceptable for single-instance bots with low restart frequency.
 const paymentSelections = new Map();
 
 /**

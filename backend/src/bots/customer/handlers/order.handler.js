@@ -1,7 +1,9 @@
 const axios = require('axios');
 const { MESSAGES } = require('../utils/messages');
+const { PAYMENT_MESSAGES } = require('../utils/paymentMessages');
 const { userCarts } = require('./vendor.handler');
 const logger = require('../../../utils/logger');
+const paymentHandler = require('./payment.handler');
 
 const API_URL = process.env.API_URL || 'http://localhost:5000/api/v1';
 
@@ -48,13 +50,11 @@ const createOrder = async (bot, chatId, userId, deliveryAddress, paymentMethod =
     message += `⏳ Holati: ${getStatusText(order.status)}`;
 
     // Add card payment message if applicable
-    const { PAYMENT_MESSAGES } = require('../utils/paymentMessages');
     if (paymentMethod === 'card_to_driver') {
       message += '\n\n' + PAYMENT_MESSAGES.uz.orderWithCard;
     }
 
     // Clear payment selection
-    const paymentHandler = require('./payment.handler');
     paymentHandler.clearPaymentSelection(chatId);
 
     const keyboard = {

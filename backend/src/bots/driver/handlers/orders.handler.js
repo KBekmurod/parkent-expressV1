@@ -120,11 +120,14 @@ const sendOrderDetails = async (bot, chatId, order, language = 'uz') => {
       const telegramId = chatId.toString();
       
       try {
-        // Get driver info
+        // Get driver info with cardNumber field (it has select: false in schema)
         const axios = require('axios');
         const API_URL = process.env.API_URL || 'http://localhost:5000/api/v1';
         const driverResponse = await axios.get(`${API_URL}/drivers/telegram/${telegramId}`);
-        const driver = driverResponse.data.data.driver;
+        let driver = driverResponse.data.data.driver;
+        
+        // If cardNumber not included, fetch it separately or use masked default
+        // The backend should handle this, but we'll use fallback in handler
         
         await cardPaymentHandler.showCardPaymentInfo(bot, chatId, order, driver);
       } catch (error) {
