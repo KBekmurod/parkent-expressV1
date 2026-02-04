@@ -95,9 +95,11 @@ const handleAddressCallback = async (bot, callbackQuery) => {
     const user = response.data.data.user;
     const address = user.addresses[addressIndex];
 
-    // Proceed to order creation
+    // Proceed to order creation with selected payment method
     const orderHandler = require('./order.handler');
-    await orderHandler.createOrder(bot, chatId, user._id, address);
+    const paymentHandler = require('./payment.handler');
+    const paymentMethod = paymentHandler.getPaymentMethod(chatId);
+    await orderHandler.createOrder(bot, chatId, user._id, address, paymentMethod);
     
   } else if (action === 'new') {
     await bot.sendMessage(

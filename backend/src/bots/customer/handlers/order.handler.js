@@ -8,7 +8,7 @@ const API_URL = process.env.API_URL || 'http://localhost:5000/api/v1';
 /**
  * Create order
  */
-const createOrder = async (bot, chatId, userId, deliveryAddress) => {
+const createOrder = async (bot, chatId, userId, deliveryAddress, paymentMethod = 'cash') => {
   try {
     const cart = userCarts.get(chatId) || [];
 
@@ -32,7 +32,7 @@ const createOrder = async (bot, chatId, userId, deliveryAddress) => {
       vendor: vendorId,
       items,
       deliveryAddress,
-      paymentMethod: 'cash' // Default, can be changed later
+      paymentMethod: paymentMethod  // Dynamic from parameter
     });
 
     const order = orderResponse.data.data.order;
@@ -46,6 +46,16 @@ const createOrder = async (bot, chatId, userId, deliveryAddress) => {
     message += `💰 Jami: *${order.total} so'm*\n`;
     message += `📍 Manzil: ${deliveryAddress.address}\n\n`;
     message += `⏳ Holati: ${getStatusText(order.status)}`;
+
+    // Add card payment message if applicable
+    const { PAYMENT_MESSAGES } = require('../utils/paymentMessages');
+    if (paymentMethod === 'card_to_driver') {
+      message += '\n\n' + PAYMENT_MESSAGES.uz.orderWithCard;
+    }
+
+    // Clear payment selection
+    const paymentHandler = require('./payment.handler');
+    paymentHandler.clearPaymentSelection(chatId);
 
     const keyboard = {
       inline_keyboard: [

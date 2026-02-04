@@ -8,6 +8,7 @@ const ordersHandler = require('./handlers/orders.handler');
 const locationHandler = require('./handlers/location.handler');
 const earningsHandler = require('./handlers/earnings.handler');
 const profileHandler = require('./handlers/profile.handler');
+const cardPaymentHandler = require('./handlers/cardPayment.handler');
 
 let driverBot;
 
@@ -54,7 +55,15 @@ const initDriverBot = () => {
       } else if (msg.location) {
         locationHandler.handleLocationMessage(driverBot, msg);
       } else if (msg.photo) {
-        startHandler.handlePhotoMessage(driverBot, msg);
+        const chatId = msg.chat.id;
+        
+        // Check if in registration flow
+        if (global.driverRegistrations?.has(chatId)) {
+          startHandler.handlePhotoMessage(driverBot, msg);
+        } else {
+          // Assume receipt upload for card payment
+          cardPaymentHandler.handleReceiptUpload(driverBot, msg);
+        }
       } else if (msg.text && !msg.text.startsWith('/')) {
         handleTextCommand(driverBot, msg);
       }

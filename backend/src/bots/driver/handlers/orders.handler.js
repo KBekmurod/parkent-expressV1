@@ -113,6 +113,24 @@ const sendOrderDetails = async (bot, chatId, order, language = 'uz') => {
       parse_mode: 'Markdown',
       reply_markup: keyboard
     });
+    
+    // If card payment, show card info
+    if (order.paymentMethod === 'card_to_driver') {
+      const cardPaymentHandler = require('./cardPayment.handler');
+      const telegramId = chatId.toString();
+      
+      try {
+        // Get driver info
+        const axios = require('axios');
+        const API_URL = process.env.API_URL || 'http://localhost:5000/api/v1';
+        const driverResponse = await axios.get(`${API_URL}/drivers/telegram/${telegramId}`);
+        const driver = driverResponse.data.data.driver;
+        
+        await cardPaymentHandler.showCardPaymentInfo(bot, chatId, order, driver);
+      } catch (error) {
+        console.error('Error showing card payment info:', error);
+      }
+    }
   } catch (error) {
     logger.error('Error sending order details:', error);
     throw error;
