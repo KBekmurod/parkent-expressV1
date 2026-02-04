@@ -12,10 +12,11 @@ const {
 } = require('../controllers/cardPayment.controller');
 const { protect, adminAuth } = require('../middleware/auth.middleware');
 const { receiptUpload } = require('../middleware/receiptUpload.middleware');
+const { uploadLimiter } = require('../middleware/rateLimit.middleware');
 
-// Public routes (Bot access)
+// Public routes (Bot access with rate limiting)
 router.post('/', createCardPayment);
-router.post('/:id/receipt', receiptUpload, uploadReceipt);
+router.post('/:id/receipt', uploadLimiter, receiptUpload, uploadReceipt);
 router.get('/driver/:driverId', getDriverPayments);
 router.get('/:id', getCardPaymentById);
 

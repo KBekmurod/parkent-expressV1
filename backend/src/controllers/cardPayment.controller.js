@@ -4,6 +4,8 @@ const Driver = require('../models/Driver.model');
 const { asyncHandler } = require('../middleware/error.middleware');
 const { AppError } = require('../middleware/error.middleware');
 const logger = require('../utils/logger');
+const crypto = require('crypto');
+const fs = require('fs');
 
 /**
  * @desc    Create card payment record
@@ -66,10 +68,8 @@ const uploadReceipt = asyncHandler(async (req, res, next) => {
   }
 
   // Store receipt metadata
-  const crypto = require('crypto');
-  const fs = require('fs');
   const fileBuffer = fs.readFileSync(req.file.path);
-  const imageHash = crypto.createHash('md5').update(fileBuffer).digest('hex');
+  const imageHash = crypto.createHash('sha256').update(fileBuffer).digest('hex');
 
   payment.receiptPhoto = req.file.path;
   payment.receiptMetadata = {
