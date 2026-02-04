@@ -1,6 +1,7 @@
 const axios = require('axios');
 const { MESSAGES } = require('../utils/messages');
 const logger = require('../../../utils/logger');
+const paymentHandler = require('./payment.handler');
 
 const API_URL = process.env.API_URL || 'http://localhost:5000/api/v1';
 
@@ -86,9 +87,9 @@ const handleCartCallback = async (bot, callbackQuery) => {
     });
   } else if (action === 'checkout') {
     await bot.answerCallbackQuery(callbackQuery.id);
-    // Proceed to address selection
-    const addressHandler = require('./address.handler');
-    await addressHandler.requestAddress(bot, chatId);
+    
+    // Show payment method selection first
+    await paymentHandler.showPaymentMethods(bot, chatId);
   }
 };
 
