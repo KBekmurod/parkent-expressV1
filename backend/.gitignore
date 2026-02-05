@@ -12,6 +12,14 @@ yarn.lock
 logs/
 *.log
 
+# Backups
+backups/
+*.sql
+*.dump
+
+# PM2
+.pm2/
+
 # Uploads
 uploads/menus/*
 uploads/logos/*

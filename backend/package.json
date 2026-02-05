@@ -6,6 +6,11 @@
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
+    "prod": "pm2 start ecosystem.config.js --env production",
+    "prod:stop": "pm2 stop parkent-express-backend",
+    "prod:restart": "pm2 restart parkent-express-backend",
+    "prod:logs": "pm2 logs parkent-express-backend",
+    "prod:monit": "pm2 monit",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
