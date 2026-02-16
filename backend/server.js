@@ -12,6 +12,7 @@ const { apiLimiter } = require('./src/middleware/rateLimit.middleware');
 const { initSocket } = require('./src/socket');
 
 const app = express();
+app.set('trust proxy', 1);
 const server = http.createServer(app);
 
 // Connect to MongoDB

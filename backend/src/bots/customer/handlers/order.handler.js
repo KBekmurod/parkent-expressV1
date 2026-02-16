@@ -141,9 +141,7 @@ const showOrderHistory = async (bot, chatId) => {
     const user = userResponse.data.data.user;
 
     // Get user orders
-    const ordersResponse = await axios.get(`${API_URL}/orders`, {
-      params: { customer: user._id }
-    });
+    const ordersResponse = await axios.get(`${API_URL}/orders/customer/${user._id}`);
     const orders = ordersResponse.data.data.orders;
 
     if (orders.length === 0) {
