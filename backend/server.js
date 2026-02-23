@@ -26,8 +26,20 @@ app.set('io', io);
 
 // Security Middleware
 app.use(helmet()); // HTTP headers security
+// Parse CORS origins - support comma-separated list
+const corsOrigins = process.env.CORS_ORIGIN
+  ? process.env.CORS_ORIGIN.split(',').map(o => o.trim())
+  : (process.env.FRONTEND_URL ? [process.env.FRONTEND_URL] : ['http://localhost:3000']);
+
 app.use(cors({
-  origin: process.env.CORS_ORIGIN || process.env.FRONTEND_URL || 'http://localhost:3000',
+  origin: (origin, callback) => {
+    // Allow requests with no origin (mobile apps, curl, etc.)
+    if (!origin) return callback(null, true);
+    if (corsOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    return callback(new Error(`CORS: Origin '${origin}' not allowed`));
+  },
   credentials: true
 }));
 app.use(mongoSanitize()); // Data sanitization against NoSQL injection

@@ -17,16 +17,20 @@ const apiLimiter = rateLimit({
 
 /**
  * Auth endpoints rate limiter (stricter)
- * 5 requests per 15 minutes
+ * 20 requests per 15 minutes per IP
  */
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 5,
+  max: 20,
   message: {
     success: false,
     message: 'Too many authentication attempts, please try again later.'
   },
-  skipSuccessfulRequests: true
+  skipSuccessfulRequests: true,
+  // Use X-Forwarded-For header when behind a proxy (nginx)
+  keyGenerator: (req) => {
+    return req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.ip;
+  }
 });
 
 /**
