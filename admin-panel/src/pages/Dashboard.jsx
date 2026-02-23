@@ -28,8 +28,8 @@ const Dashboard = () => {
       ])
 
       setStats(statsRes.data)
-      setOrdersData(ordersRes.data.orderStats)
-      setRevenueData(revenueRes.data.revenueStats)
+      setOrdersData(ordersRes.data?.orderStats || [])
+      setRevenueData(revenueRes.data?.revenueStats || [])
     } catch (error) {
       console.error('Error loading dashboard data:', error)
     } finally {
