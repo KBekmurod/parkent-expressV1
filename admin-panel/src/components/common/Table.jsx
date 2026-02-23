@@ -3,7 +3,7 @@ const Table = ({ columns, data, onEdit, onDelete, loading }) => {
     return <div className="card">Loading...</div>
   }
 
-  if (data.length === 0) {
+  if (!data || data.length === 0) {
     return (
       <div className="card text-center py-8 text-gray-500">
         No data available
@@ -29,7 +29,7 @@ const Table = ({ columns, data, onEdit, onDelete, loading }) => {
           </tr>
         </thead>
         <tbody>
-          {data.map((row) => (
+          {(data || []).map((row) => (
             <tr key={row._id} className="border-b hover:bg-gray-50">
               {columns.map((column) => (
                 <td key={column.key} className="py-3">
