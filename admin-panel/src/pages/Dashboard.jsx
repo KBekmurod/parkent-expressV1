@@ -27,9 +27,9 @@ const Dashboard = () => {
         dashboardService.getRevenueChartData(6),
       ])
 
-      setStats(statsRes.data?.data || statsRes.data)
-      setOrdersData(ordersRes.data?.data?.orderStats || [])
-      setRevenueData(revenueRes.data?.data?.revenueStats || [])
+      setStats(statsRes.data || statsRes)
+      setOrdersData(ordersRes.data?.orderStats || ordersRes.orderStats || [])
+      setRevenueData(revenueRes.data?.revenueStats || revenueRes.revenueStats || [])
     } catch (error) {
       console.error('Error loading dashboard data:', error)
     } finally {
@@ -45,10 +45,10 @@ const Dashboard = () => {
     <div>
       <h1 className="text-3xl font-bold mb-6">Dashboard</h1>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-        <StatCard title="Total Users" value={stats?.users || 0} icon={Users} trend="up" trendValue="+12%" color="blue" />
-        <StatCard title="Total Vendors" value={stats?.vendors || 0} icon={Store} trend="up" trendValue="+8%" color="green" />
-        <StatCard title="Total Drivers" value={stats?.drivers || 0} icon={Truck} trend="up" trendValue="+5%" color="purple" />
-        <StatCard title="Total Orders" value={stats?.orders || 0} icon={ShoppingBag} trend="up" trendValue="+15%" color="orange" />
+        <StatCard title="Total Users" value={stats?.users || 0} icon={Users} color="blue" />
+        <StatCard title="Total Vendors" value={stats?.vendors || 0} icon={Store} color="green" />
+        <StatCard title="Total Drivers" value={stats?.drivers || 0} icon={Truck} color="purple" />
+        <StatCard title="Total Orders" value={stats?.orders || 0} icon={ShoppingBag} color="orange" />
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         <OrdersChart data={ordersData} />
