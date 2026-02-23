@@ -28,8 +28,8 @@ const Dashboard = () => {
       ])
 
       setStats(statsRes.data)
-      setOrdersData(ordersRes.data)
-      setRevenueData(revenueRes.data)
+      setOrdersData(ordersRes.data.orderStats)
+      setRevenueData(revenueRes.data.revenueStats)
     } catch (error) {
       console.error('Error loading dashboard data:', error)
     } finally {
@@ -49,7 +49,7 @@ const Dashboard = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
         <StatCard
           title="Total Users"
-          value={stats?.totalUsers || 0}
+          value={stats?.users || 0}
           icon={Users}
           trend="up"
           trendValue="+12%"
@@ -57,7 +57,7 @@ const Dashboard = () => {
         />
         <StatCard
           title="Total Vendors"
-          value={stats?.totalVendors || 0}
+          value={stats?.vendors || 0}
           icon={Store}
           trend="up"
           trendValue="+8%"
@@ -65,7 +65,7 @@ const Dashboard = () => {
         />
         <StatCard
           title="Total Drivers"
-          value={stats?.totalDrivers || 0}
+          value={stats?.drivers || 0}
           icon={Truck}
           trend="up"
           trendValue="+5%"
@@ -73,7 +73,7 @@ const Dashboard = () => {
         />
         <StatCard
           title="Total Orders"
-          value={stats?.totalOrders || 0}
+          value={stats?.orders || 0}
           icon={ShoppingBag}
           trend="up"
           trendValue="+15%"
