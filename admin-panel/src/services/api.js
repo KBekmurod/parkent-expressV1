@@ -1,4 +1,4 @@
-import axios from 'axios'
+(response) => response.dataimport axios from 'axios'
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1'
 
@@ -23,7 +23,7 @@ api.interceptors.request.use(
 
 // Response interceptor
 api.interceptors.response.use(
-  (response) => response.data?.data || response.data,
+  (response) => response.data,
   (error) => {
     if (error.response?.status === 401) {
       localStorage.removeItem('token')

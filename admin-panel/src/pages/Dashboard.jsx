@@ -27,9 +27,9 @@ const Dashboard = () => {
         dashboardService.getRevenueChartData(6),
       ])
 
-      setStats(statsRes.data)
-      setOrdersData(ordersRes.data?.orderStats || [])
-      setRevenueData(revenueRes.data?.revenueStats || [])
+      setStats(statsRes.data?.data || statsRes.data)
+      setOrdersData(ordersRes.data?.data?.orderStats || [])
+      setRevenueData(revenueRes.data?.data?.revenueStats || [])
     } catch (error) {
       console.error('Error loading dashboard data:', error)
     } finally {
