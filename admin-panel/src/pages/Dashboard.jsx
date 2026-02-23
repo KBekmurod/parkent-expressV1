@@ -24,12 +24,15 @@ const Dashboard = () => {
         dashboardService.getOrdersChartData(7),
         dashboardService.getRevenueChartData(6),
       ])
-      setStats(statsRes.data || statsRes)
-      setOrdersData(ordersRes.data?.orderStats || ordersRes.orderStats || [])
-      setRevenueData(revenueRes.data?.revenueStats || revenueRes.revenueStats || [])
+      // Stats va Chart ma'lumotlarini chuqur tekshirish bilan yuklash
+      setStats(statsRes?.data || statsRes || {})
+      setOrdersData(ordersRes?.data?.orderStats || ordersRes?.orderStats || [])
+      setRevenueData(revenueRes?.data?.revenueStats || revenueRes?.revenueStats || [])
     } catch (error) {
-      console.error('Error loading data:', error)
-    } finally { setLoading(false) }
+      console.error('Data error:', error)
+    } finally {
+      setLoading(false)
+    }
   }
 
   if (loading) return <div className="flex items-center justify-center h-screen">Loading...</div>
