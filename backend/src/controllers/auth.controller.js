@@ -1,5 +1,7 @@
 const Admin = require('../models/Admin.model');
+const User = require('../models/User.model');
 const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
 const { asyncHandler } = require('../middleware/error.middleware');
 const { AppError } = require('../middleware/error.middleware');
 const logger = require('../utils/logger');
@@ -178,9 +180,119 @@ const updatePassword = asyncHandler(async (req, res, next) => {
   });
 });
 
+/**
+ * @desc    Register new web customer
+ * @route   POST /api/v1/auth/web/register
+ * @access  Public
+ */
+const webRegister = asyncHandler(async (req, res, next) => {
+  const { phone, pin, firstName, lastName } = req.body;
+
+  if (!phone || !pin) {
+    return next(new AppError('Telefon raqam va PIN kiritish majburiy', 400));
+  }
+
+  if (!/^\d{4}$/.test(pin)) {
+    return next(new AppError('PIN 4 xonali raqam bo\'lishi kerak', 400));
+  }
+
+  // Check if web user with this phone already exists
+  const existingUser = await User.findOne({ phone, telegramId: { $gte: 'web_', $lt: 'web`' } });
+  if (existingUser) {
+    return next(new AppError('Bu telefon raqam allaqachon ro\'yxatdan o\'tgan', 400));
+  }
+
+  // Hash PIN
+  const hashedPin = await bcrypt.hash(pin, 10);
+
+  // Create web user (telegramId uses web_ prefix to distinguish from bot users)
+  const user = await User.create({
+    telegramId: `web_${phone}`,
+    firstName: firstName || 'Foydalanuvchi',
+    lastName: lastName || '',
+    phone,
+    webPin: hashedPin
+  });
+
+  const token = generateToken(user._id);
+
+  logger.info(`New web user registered: ${phone}`);
+
+  res.status(201).json({
+    success: true,
+    message: 'Muvaffaqiyatli ro\'yxatdan o\'tdingiz',
+    data: {
+      user: {
+        id: user._id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        phone: user.phone
+      },
+      token
+    }
+  });
+});
+
+/**
+ * @desc    Login web customer
+ * @route   POST /api/v1/auth/web/login
+ * @access  Public
+ */
+const webLogin = asyncHandler(async (req, res, next) => {
+  const { phone, pin } = req.body;
+
+  if (!phone || !pin) {
+    return next(new AppError('Telefon raqam va PIN kiritish majburiy', 400));
+  }
+
+  if (!/^\d{4}$/.test(pin)) {
+    return next(new AppError('PIN 4 xonali raqam bo\'lishi kerak', 400));
+  }
+
+  // Find web user by phone (only web-registered users have web_ telegramId prefix)
+  const user = await User.findOne({ phone, telegramId: { $gte: 'web_', $lt: 'web`' } }).select('+webPin');
+
+  if (!user) {
+    return next(new AppError('Foydalanuvchi topilmadi. Avval ro\'yxatdan o\'ting', 404));
+  }
+
+  if (user.status === 'blocked') {
+    return next(new AppError('Hisobingiz bloklangan', 403));
+  }
+
+  if (!user.webPin) {
+    return next(new AppError('Noto\'g\'ri PIN', 401));
+  }
+
+  const isPinValid = await bcrypt.compare(pin, user.webPin);
+  if (!isPinValid) {
+    return next(new AppError('Noto\'g\'ri PIN', 401));
+  }
+
+  const token = generateToken(user._id);
+
+  logger.info(`Web user logged in: ${phone}`);
+
+  res.status(200).json({
+    success: true,
+    message: 'Muvaffaqiyatli kirdingiz',
+    data: {
+      user: {
+        id: user._id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        phone: user.phone
+      },
+      token
+    }
+  });
+});
+
 module.exports = {
   register,
   login,
   getMe,
-  updatePassword
+  updatePassword,
+  webRegister,
+  webLogin
 };

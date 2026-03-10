@@ -56,6 +56,24 @@ services:
     networks:
       - parkent-network
 
+  # Customer Web App
+  customer-web:
+    build:
+      context: ./customer-web
+      dockerfile: Dockerfile
+    container_name: parkent-customer-web
+    restart: unless-stopped
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:5000/api/v1
+      - NEXT_PUBLIC_SOCKET_URL=http://localhost:5000
+      - NEXT_PUBLIC_APP_NAME=Parkent Express
+    ports:
+      - '3001:3001'
+    depends_on:
+      - backend
+    networks:
+      - parkent-network
+
   # Redis (Optional - for production caching)
   redis:
     image: redis:7-alpine
