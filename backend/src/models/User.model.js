@@ -58,6 +58,10 @@ const userSchema = new mongoose.Schema({
     type: String,
     enum: ['active', 'blocked'],
     default: 'active'
+  },
+  webPin: {
+    type: String,
+    select: false
   }
 }, {
   timestamps: true
