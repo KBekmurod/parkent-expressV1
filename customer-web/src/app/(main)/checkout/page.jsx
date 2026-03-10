@@ -29,7 +29,14 @@ export default function CheckoutPage() {
       return;
     }
 
-    const vendorId = cart[0]?.vendorId;
+    // Validate all cart items are from the same vendor
+    const vendorIds = [...new Set(cart.map((item) => item.vendorId))];
+    if (vendorIds.length > 1) {
+      toast.error("Savatchangizda turli restoranlardan mahsulotlar bor. Iltimos, bitta restorandan buyurtma bering");
+      return;
+    }
+
+    const vendorId = vendorIds[0];
 
     setLoading(true);
     try {

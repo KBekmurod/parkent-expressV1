@@ -197,7 +197,7 @@ const webRegister = asyncHandler(async (req, res, next) => {
   }
 
   // Check if web user with this phone already exists
-  const existingUser = await User.findOne({ phone, telegramId: { $regex: /^web_/ } });
+  const existingUser = await User.findOne({ phone, telegramId: { $gte: 'web_', $lt: 'web`' } });
   if (existingUser) {
     return next(new AppError('Bu telefon raqam allaqachon ro\'yxatdan o\'tgan', 400));
   }
@@ -250,7 +250,7 @@ const webLogin = asyncHandler(async (req, res, next) => {
   }
 
   // Find web user by phone (only web-registered users have web_ telegramId prefix)
-  const user = await User.findOne({ phone, telegramId: { $regex: /^web_/ } }).select('+webPin');
+  const user = await User.findOne({ phone, telegramId: { $gte: 'web_', $lt: 'web`' } }).select('+webPin');
 
   if (!user) {
     return next(new AppError('Foydalanuvchi topilmadi. Avval ro\'yxatdan o\'ting', 404));

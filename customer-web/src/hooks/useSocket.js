@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useRef } from 'react';
 import { io } from 'socket.io-client';
-import { SOCKET_URL } from '../utils/constants';
+import { SOCKET_URL, TOKEN_KEY } from '../utils/constants';
 
 export function useSocket(userId, onOrderUpdate) {
   const socketRef = useRef(null);
@@ -14,8 +14,11 @@ export function useSocket(userId, onOrderUpdate) {
   useEffect(() => {
     if (!userId) return;
 
+    const token = typeof window !== 'undefined' ? localStorage.getItem(TOKEN_KEY) : null;
+
     socketRef.current = io(SOCKET_URL, {
       transports: ['websocket', 'polling'],
+      auth: token ? { token } : undefined,
     });
 
     const socket = socketRef.current;

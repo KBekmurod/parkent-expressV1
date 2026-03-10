@@ -70,5 +70,6 @@ const userSchema = new mongoose.Schema({
 // Indexes
 userSchema.index({ phone: 1 });
 userSchema.index({ status: 1 });
+userSchema.index({ phone: 1, telegramId: 1 });
 
 module.exports = mongoose.model('User', userSchema);
