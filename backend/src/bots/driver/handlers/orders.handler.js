@@ -4,13 +4,9 @@ const { getOrderActionKeyboard, getRejectReasonKeyboard } = require('../keyboard
 const { formatPrice, formatDateTime, getOrderStatusText } = require('../utils/helpers');
 const logger = require('../../../utils/logger');
 const cardPaymentHandler = require('./cardPayment.handler');
+const store = require('../../../utils/botStateStore');
 
 const API_URL = process.env.API_URL || 'http://localhost:5000/api/v1';
-
-// Store order rejection inputs
-if (!global.driverOrderRejectionInputs) {
-  global.driverOrderRejectionInputs = new Map();
-}
 
 /**
  * Show active orders
@@ -163,8 +159,8 @@ const handleOrderCallback = async (bot, callbackQuery) => {
     } else if (action === 'reject_reason') {
       const reason = parts[3];
       if (reason === 'custom') {
-        // Ask for custom reason
-        global.driverOrderRejectionInputs.set(chatId, orderId);
+        // Maxsus sabab so'rash
+        await store.setDriverReject(chatId, orderId);
         await bot.sendMessage(chatId, MESSAGES.uz.enterCustomReason);
         await bot.answerCallbackQuery(callbackQuery.id);
       } else {
@@ -344,7 +340,7 @@ const handleRejectionReasonInput = async (bot, msg) => {
   const reason = msg.text;
 
   try {
-    const orderId = global.driverOrderRejectionInputs.get(chatId);
+    const orderId = await store.getDriverReject(chatId);
     
     if (!orderId) {
       return;
@@ -352,8 +348,7 @@ const handleRejectionReasonInput = async (bot, msg) => {
 
     await rejectOrder(bot, chatId, null, orderId, reason);
     
-    // Clear state
-    global.driverOrderRejectionInputs.delete(chatId);
+    await store.delDriverReject(chatId);
 
     await bot.sendMessage(chatId, `❌ Buyurtma rad etildi.\n\nSabab: ${reason}`);
   } catch (error) {

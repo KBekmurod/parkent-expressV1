@@ -1,6 +1,7 @@
 const TelegramBot = require('node-telegram-bot-api');
 const axios = require('axios');
 const logger = require('../../utils/logger');
+const store = require('../../utils/botStateStore');
 
 // Handlers
 const startHandler = require('./handlers/start.handler');
@@ -13,24 +14,19 @@ const settlementHandler = require('./handlers/settlement.handler');
 
 let driverBot;
 
-/**
- * Initialize Driver Bot
- */
 const initDriverBot = () => {
   const token = process.env.DRIVER_BOT_TOKEN;
 
   if (!token) {
-    logger.warn('⚠️ Driver Bot token not provided. Bot disabled.');
+    logger.warn('⚠️ Driver Bot token topilmadi. Bot o\'chirildi.');
     return null;
   }
 
   try {
     driverBot = new TelegramBot(token, { polling: true });
 
-    // Command handlers
     driverBot.onText(/\/start/, startHandler.handleStart(driverBot));
 
-    // Callback query handler
     driverBot.on('callback_query', (callbackQuery) => {
       const data = callbackQuery.data;
 
@@ -49,22 +45,19 @@ const initDriverBot = () => {
       }
     });
 
-    // Message handlers
-    driverBot.on('message', (msg) => {
+    driverBot.on('message', async (msg) => {
       const chatId = msg.chat.id;
-      
+
       if (msg.contact) {
         startHandler.handleContact(driverBot)(msg);
       } else if (msg.location) {
         locationHandler.handleLocationMessage(driverBot, msg);
       } else if (msg.photo) {
-        const chatId = msg.chat.id;
-        
-        // Check if in registration flow
-        if (global.driverRegistrations?.has(chatId)) {
+        // Ro'yxatdan o'tish jarayonida ekanligini Redis orqali tekshirish
+        const regState = await store.getDriverReg(chatId);
+        if (regState) {
           startHandler.handlePhotoMessage(driverBot, msg);
         } else {
-          // Assume receipt upload for card payment
           cardPaymentHandler.handleReceiptUpload(driverBot, msg);
         }
       } else if (msg.text && !msg.text.startsWith('/')) {
@@ -72,76 +65,66 @@ const initDriverBot = () => {
       }
     });
 
-    // Error handler
     driverBot.on('polling_error', (error) => {
       logger.error('Driver Bot polling error:', error);
     });
 
-    logger.info('✅ Driver Bot initialized');
+    logger.info('✅ Driver Bot ishga tushdi');
     return driverBot;
   } catch (error) {
-    logger.error('❌ Driver Bot initialization failed:', error);
+    logger.error('❌ Driver Bot ishga tushmadi:', error);
     return null;
   }
 };
 
-/**
- * Handle text commands from main menu
- */
 const handleTextCommand = async (bot, msg) => {
   const chatId = msg.chat.id;
   const text = msg.text;
   const telegramId = chatId.toString();
 
   try {
-    // Check if in registration flow
-    if (global.driverRegistrations?.has(chatId)) {
+    // Ro'yxatdan o'tish jarayonida ekanligini tekshirish
+    const regState = await store.getDriverReg(chatId);
+    if (regState) {
       await startHandler.handleTextMessage(bot)(msg);
       return;
     }
 
-    // Check if waiting for rejection reason
-    if (global.driverOrderRejectionInputs?.has(chatId)) {
+    // Rad etish sababi kutilayotganini tekshirish
+    const rejectOrderId = await store.getDriverReject(chatId);
+    if (rejectOrderId) {
       await ordersHandler.handleRejectionReasonInput(bot, msg);
       return;
     }
 
-    // Get driver
     const API_URL = process.env.API_URL || 'http://localhost:5000/api/v1';
     const response = await axios.get(`${API_URL}/drivers/telegram/${telegramId}`);
     const driver = response.data.data.driver;
 
-    // Handle main menu commands
-    if (text === '📦 Faol buyurtmalar' || text === '📦 Активные заказы') {
+    if (text === '📦 Faol buyurtmalar') {
       await ordersHandler.showActiveOrders(bot, chatId, driver._id);
-    } else if (text === '📋 Tarix' || text === '📋 История') {
+    } else if (text === '📋 Tarix') {
       await ordersHandler.showOrderHistory(bot, chatId, driver._id);
-    } else if (text === '💰 Daromad' || text === '💰 Доход') {
+    } else if (text === '💰 Daromad') {
       await earningsHandler.showEarnings(bot, chatId, driver._id);
-    } else if (text === '💰 Mening hisobim' || text === '💰 Мой счет') {
+    } else if (text === '💰 Mening hisobim') {
       await settlementHandler.showDailyCollections(bot, chatId, driver._id);
-    } else if (text === '🔄 Online' || text === '🔄 Онлайн') {
+    } else if (text === '🔄 Online') {
       await profileHandler.toggleOnlineStatus(bot, chatId, driver._id, true);
-    } else if (text === '⏸️ Offline' || text === '⏸️ Оффлайн') {
+    } else if (text === '⏸️ Offline') {
       await profileHandler.toggleOnlineStatus(bot, chatId, driver._id, false);
-    } else if (text === '👤 Profil' || text === '👤 Профиль') {
+    } else if (text === '👤 Profil') {
       await profileHandler.showProfile(bot, chatId, driver._id);
-    } else if (text === '⚙️ Sozlamalar' || text === '⚙️ Настройки') {
+    } else if (text === '⚙️ Sozlamalar') {
       await profileHandler.showSettings(bot, chatId);
     }
   } catch (error) {
-    logger.error('Error handling text command:', error);
+    logger.error('Matn komandasi xatosi:', error);
   }
 };
 
-/**
- * Get Driver Bot instance
- */
 const getDriverBot = () => {
-  if (!driverBot) {
-    throw new Error('Driver Bot not initialized');
-  }
-  return driverBot;
+  return driverBot || null;
 };
 
 module.exports = {

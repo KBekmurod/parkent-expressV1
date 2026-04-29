@@ -11,7 +11,18 @@
     "prod:restart": "pm2 restart parkent-express-backend",
     "prod:logs": "pm2 logs parkent-express-backend",
     "prod:monit": "pm2 monit",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest --runInBand --forceExit",
+    "test:watch": "jest --watchAll --runInBand",
+    "test:coverage": "jest --coverage --runInBand --forceExit"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "testMatch": ["**/tests/**/*.test.js"],
+    "setupFiles": ["./tests/setup.js"],
+    "testTimeout": 30000,
+    "coverageDirectory": "coverage",
+    "coverageReporters": ["text", "lcov"],
+    "testPathIgnorePatterns": ["/node_modules/"]
   },
   "keywords": [
     "food-delivery",
@@ -43,7 +54,33 @@
     "winston": "^3.11.0",
     "xss-clean": "^0.1.4"
   },
+  "dependencies": {
+    "axios": "^1.6.2",
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "express-mongo-sanitize": "^2.2.0",
+    "express-rate-limit": "^7.1.5",
+    "form-data": "^4.0.5",
+    "helmet": "^7.1.0",
+    "ioredis": "^5.3.2",
+    "joi": "^17.11.0",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.0.0",
+    "multer": "^2.0.2",
+    "node-cron": "^4.2.1",
+    "node-telegram-bot-api": "^0.64.0",
+    "sharp": "^0.33.1",
+    "socket.io": "^4.6.0",
+    "uuid": "^9.0.1",
+    "winston": "^3.11.0",
+    "xss-clean": "^0.1.4"
+  },
   "devDependencies": {
-    "nodemon": "^3.0.2"
+    "jest": "^29.7.0",
+    "mongodb-memory-server": "^9.1.6",
+    "nodemon": "^3.0.2",
+    "supertest": "^6.3.4"
   }
 }

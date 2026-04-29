@@ -7,14 +7,8 @@ const addressSchema = new mongoose.Schema({
     trim: true
   },
   location: {
-    lat: {
-      type: Number,
-      required: true
-    },
-    lng: {
-      type: Number,
-      required: true
-    }
+    lat: { type: Number, required: true },
+    lng: { type: Number, required: true }
   },
   address: {
     type: String,
@@ -30,9 +24,17 @@ const addressSchema = new mongoose.Schema({
 const userSchema = new mongoose.Schema({
   telegramId: {
     type: String,
-    required: true,
     unique: true,
-    index: true
+    sparse: true,  // null qiymatga ruxsat beradi (web foydalanuvchilar uchun)
+    index: true,
+    trim: true
+  },
+  // Web foydalanuvchilar uchun alohida telefon maydoni (telegramId hiyla-nayrang o'rniga)
+  webPhone: {
+    type: String,
+    unique: true,
+    sparse: true,
+    trim: true
   },
   firstName: {
     type: String,
@@ -49,6 +51,10 @@ const userSchema = new mongoose.Schema({
     sparse: true,
     default: ''
   },
+  webPin: {
+    type: String,
+    select: false  // Xavfsizlik: odatda so'rovlarga kiritilmaydi
+  },
   addresses: [addressSchema],
   totalOrders: {
     type: Number,
@@ -59,17 +65,20 @@ const userSchema = new mongoose.Schema({
     enum: ['active', 'blocked'],
     default: 'active'
   },
-  webPin: {
+  // Foydalanuvchi turi: 'telegram' yoki 'web'
+  authType: {
     type: String,
-    select: false
+    enum: ['telegram', 'web'],
+    default: 'telegram'
   }
 }, {
   timestamps: true
 });
 
-// Indexes
+// Indekslar
 userSchema.index({ phone: 1 });
 userSchema.index({ status: 1 });
-userSchema.index({ phone: 1, telegramId: 1 });
+userSchema.index({ webPhone: 1 });
+userSchema.index({ authType: 1 });
 
 module.exports = mongoose.model('User', userSchema);

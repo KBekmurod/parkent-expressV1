@@ -28,6 +28,8 @@ services:
     environment:
       - NODE_ENV=development
       - MONGODB_URI=mongodb://mongo:27017/parkent-express
+      - REDIS_URL=redis://redis:6379
+      - API_URL=http://localhost:5000/api/v1
     ports:
       - '5000:5000'
     volumes:
@@ -36,6 +38,7 @@ services:
       - backend-node-modules:/app/node_modules
     depends_on:
       - mongo
+      - redis
     networks:
       - parkent-network
     command: npm run dev

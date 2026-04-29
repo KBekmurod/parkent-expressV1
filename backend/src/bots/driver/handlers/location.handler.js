@@ -1,3 +1,4 @@
+const store = require('../../../utils/botStateStore');
 const axios = require('axios');
 const { MESSAGES } = require('../utils/messages');
 const logger = require('../../../utils/logger');
@@ -5,9 +6,7 @@ const logger = require('../../../utils/logger');
 const API_URL = process.env.API_URL || 'http://localhost:5000/api/v1';
 
 // Store location tracking states
-if (!global.driverLocationTracking) {
-  global.driverLocationTracking = new Map();
-}
+
 
 /**
  * Handle location message
@@ -46,7 +45,7 @@ const handleLocationMessage = async (bot, msg) => {
 const startLocationTracking = async (bot, chatId, driverId) => {
   try {
     // Check if already tracking
-    if (global.driverLocationTracking.has(driverId)) {
+    if (!!(await store.getDriverTracking(driverId))) {
       return;
     }
 
@@ -88,7 +87,7 @@ const startLocationTracking = async (bot, chatId, driverId) => {
     }, 30000); // 30 seconds
 
     // Store tracking state
-    global.driverLocationTracking.set(driverId, {
+    store.setDriverTracking(driverId, {
       chatId,
       interval: trackingInterval,
       startTime: Date.now()
@@ -107,7 +106,7 @@ const startLocationTracking = async (bot, chatId, driverId) => {
  */
 const stopLocationTracking = async (bot, chatId, driverId) => {
   try {
-    const tracking = global.driverLocationTracking.get(driverId);
+    const tracking = await store.getDriverTracking(driverId);
     
     if (!tracking) {
       return;
@@ -117,7 +116,7 @@ const stopLocationTracking = async (bot, chatId, driverId) => {
     clearInterval(tracking.interval);
     
     // Remove tracking state
-    global.driverLocationTracking.delete(driverId);
+    await store.delDriverTracking(driverId);
 
     await bot.sendMessage(chatId, MESSAGES.uz.locationTrackingStopped);
     logger.info(`Location tracking stopped for driver ${driverId}`);

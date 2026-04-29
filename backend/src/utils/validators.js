@@ -129,17 +129,19 @@ const orderSchemas = {
       Joi.object({
         product: Joi.string().pattern(/^[0-9a-fA-F]{24}$/).required(),
         quantity: Joi.number().min(1).required()
-      })
+      }).unknown(true)  // keling, frontend'dan keladigan qo'shimcha maydonlarga ruxsat beramiz
     ).min(1).required(),
     deliveryAddress: Joi.object({
       location: Joi.object({
         lat: Joi.number().required(),
         lng: Joi.number().required()
-      }).required(),
+      }).optional(),  // Web'dan kelgan vaqtda location bo'lmasligi mumkin
       address: Joi.string().trim().required()
     }).required(),
-    paymentMethod: Joi.string().valid('cash', 'card').required(),
-    customerNote: Joi.string().trim().allow('')
+    paymentMethod: Joi.string().valid('cash', 'card', 'card_to_driver').required(),
+    customerNote: Joi.string().trim().allow(''),
+    totalAmount: Joi.number().optional(),  // Frontend kompatibilligi uchun (server qayta hisoblaydi)
+    source: Joi.string().valid('telegram', 'web').optional()
   }),
   
   updateStatus: Joi.object({

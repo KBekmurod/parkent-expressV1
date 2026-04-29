@@ -93,10 +93,7 @@ const initCustomerBot = () => {
  * Get Customer Bot instance
  */
 const getCustomerBot = () => {
-  if (!customerBot) {
-    throw new Error('Customer Bot not initialized');
-  }
-  return customerBot;
+  return customerBot || null;
 };
 
 module.exports = {

@@ -20,12 +20,10 @@ const orderItemSchema = new mongoose.Schema({
 const deliveryAddressSchema = new mongoose.Schema({
   location: {
     lat: {
-      type: Number,
-      required: true
+      type: Number
     },
     lng: {
-      type: Number,
-      required: true
+      type: Number
     }
   },
   address: {

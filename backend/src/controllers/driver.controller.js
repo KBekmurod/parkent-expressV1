@@ -157,7 +157,7 @@ const updateLocation = asyncHandler(async (req, res, next) => {
 });
 
 /**
- * @desc    Toggle driver online/offline
+ * @desc    Haydovchini online/offline qilish
  * @route   PUT /api/v1/drivers/:id/toggle-online
  * @access  Public (Telegram bot)
  */
@@ -165,21 +165,29 @@ const toggleOnline = asyncHandler(async (req, res, next) => {
   const driver = await Driver.findById(req.params.id);
 
   if (!driver) {
-    return next(new AppError('Driver not found', 404));
+    return next(new AppError('Haydovchi topilmadi', 404));
   }
 
   if (driver.status !== 'active') {
-    return next(new AppError('Driver account is not active', 403));
+    return next(new AppError('Hisob faol emas', 403));
+  }
+
+  // Agar haydovchi offline bo'lmoqchi bo'lsa va faol buyurtmalari bo'lsa — taqiqlash
+  if (driver.isOnline && driver.currentOrders && driver.currentOrders.length > 0) {
+    return next(new AppError(
+      `Sizda ${driver.currentOrders.length} ta faol buyurtma bor. Avval ularni yetkazib bering.`,
+      400
+    ));
   }
 
   driver.isOnline = !driver.isOnline;
   await driver.save();
 
-  logger.info(`Driver ${driver.isOnline ? 'online' : 'offline'}: ${driver.firstName}`);
+  logger.info(`Haydovchi ${driver.isOnline ? 'online' : 'offline'}: ${driver.firstName}`);
 
   res.status(200).json({
     success: true,
-    message: `Driver is now ${driver.isOnline ? 'online' : 'offline'}`,
+    message: `Haydovchi endi ${driver.isOnline ? 'online' : 'offline'}`,
     data: { driver }
   });
 });

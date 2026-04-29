@@ -2,44 +2,36 @@ const axios = require('axios');
 const { MESSAGES } = require('../utils/messages');
 const logger = require('../../../utils/logger');
 const paymentHandler = require('./payment.handler');
+const store = require('../../../utils/botStateStore');
 
 const API_URL = process.env.API_URL || 'http://localhost:5000/api/v1';
 
-// Import cart storage from vendor handler
-const { userCarts } = require('./vendor.handler');
-
-/**
- * Show cart
- */
 const showCart = async (bot, chatId) => {
   try {
-    const cart = userCarts.get(chatId) || [];
+    const cart = (await store.getBotCart(chatId)) || [];
 
     if (cart.length === 0) {
       return await bot.sendMessage(chatId, MESSAGES.uz.emptyCart);
     }
 
-    // Fetch product details
     let total = 0;
     let message = '🛒 *Savat:*\n\n';
 
     for (const item of cart) {
       const response = await axios.get(`${API_URL}/products/${item.productId}`);
       const product = response.data.data.product;
-      const itemTotal = product.finalPrice * item.quantity;
+      const itemTotal = (product.finalPrice || product.price) * item.quantity;
       total += itemTotal;
 
-      message += `${product.name.uz}\n`;
-      message += `${item.quantity} x ${product.finalPrice} so'm = ${itemTotal} so'm\n\n`;
+      message += `${product.name?.uz || product.name}\n`;
+      message += `${item.quantity} x ${product.finalPrice || product.price} so'm = ${itemTotal} so'm\n\n`;
     }
 
     message += `💰 *Jami: ${total} so'm*`;
 
     const keyboard = {
       inline_keyboard: [
-        [
-          { text: '✅ Buyurtma berish', callback_data: 'cart:checkout' }
-        ],
+        [{ text: '✅ Buyurtma berish', callback_data: 'cart:checkout' }],
         [
           { text: '🗑️ Savatni tozalash', callback_data: 'cart:clear' },
           { text: '🔙 Orqaga', callback_data: 'menu:restaurants' }
@@ -47,31 +39,17 @@ const showCart = async (bot, chatId) => {
       ]
     };
 
-    await bot.sendMessage(
-      chatId,
-      message,
-      { 
-        parse_mode: 'Markdown',
-        reply_markup: keyboard
-      }
-    );
-
+    await bot.sendMessage(chatId, message, { parse_mode: 'Markdown', reply_markup: keyboard });
   } catch (error) {
     logger.error('Error showing cart:', error);
     await bot.sendMessage(chatId, MESSAGES.uz.error);
   }
 };
 
-/**
- * Clear cart
- */
-const clearCart = (chatId) => {
-  userCarts.delete(chatId);
+const clearCart = async (chatId) => {
+  await store.delBotCart(chatId);
 };
 
-/**
- * Handle cart callback
- */
 const handleCartCallback = async (bot, callbackQuery) => {
   const chatId = callbackQuery.message.chat.id;
   const action = callbackQuery.data.split(':')[1];
@@ -80,15 +58,13 @@ const handleCartCallback = async (bot, callbackQuery) => {
     await bot.answerCallbackQuery(callbackQuery.id);
     await showCart(bot, chatId);
   } else if (action === 'clear') {
-    clearCart(chatId);
+    await clearCart(chatId);
     await bot.answerCallbackQuery(callbackQuery.id, {
       text: '🗑️ Savat tozalandi',
       show_alert: true
     });
   } else if (action === 'checkout') {
     await bot.answerCallbackQuery(callbackQuery.id);
-    
-    // Show payment method selection first
     await paymentHandler.showPaymentMethods(bot, chatId);
   }
 };

@@ -1,5 +1,6 @@
 const TelegramBot = require('node-telegram-bot-api');
 const logger = require('../../utils/logger');
+const store = require('../../utils/botStateStore');
 
 // Handlers
 const startHandler = require('./handlers/start.handler');
@@ -45,7 +46,7 @@ const initVendorBot = () => {
     });
 
     // Message handlers
-    vendorBot.on('message', (msg) => {
+    vendorBot.on('message', async (msg) => {
       const chatId = msg.chat.id;
       
       if (msg.contact) {
@@ -57,15 +58,15 @@ const initVendorBot = () => {
       } else if (msg.document) {
         menuHandler.handleDocumentMessage(vendorBot, msg);
       } else if (msg.text && !msg.text.startsWith('/')) {
-        // Check if in registration flow
-        if (global.vendorRegistrations?.has(chatId)) {
+        // Ro'yxatdan o'tish jarayonida ekanligini tekshirish
+        if (await store.getVendorReg(chatId)) {
           startHandler.handleTextMessage(vendorBot)(msg);
-        } else if (global.productCreationStates?.has(chatId) || global.productEditStates?.has(chatId)) {
+        } else if ((await store.getProductCreate(chatId)) || (await store.getProductEdit(chatId))) {
           menuHandler.handleTextMessage(vendorBot, msg);
-        } else if (global.orderRejectionInputs?.has(chatId)) {
+        } else if (await store.getVendorReject(chatId)) {
           ordersHandler.handleRejectionReasonInput(vendorBot, msg);
         } else {
-          // Main menu text commands
+          // Asosiy menyu komandalari
           handleTextCommand(vendorBot, msg);
         }
       }
@@ -119,10 +120,7 @@ const handleTextCommand = async (bot, msg) => {
  * Get Vendor Bot instance
  */
 const getVendorBot = () => {
-  if (!vendorBot) {
-    throw new Error('Vendor Bot not initialized');
-  }
-  return vendorBot;
+  return vendorBot || null;
 };
 
 module.exports = {

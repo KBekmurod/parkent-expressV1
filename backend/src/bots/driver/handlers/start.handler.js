@@ -3,13 +3,9 @@ const { getMainMenuKeyboard, getVehicleTypeKeyboard } = require('../keyboards/ma
 const { MESSAGES } = require('../utils/messages');
 const { validatePhoneNumber, validatePlateNumber } = require('../utils/helpers');
 const logger = require('../../../utils/logger');
+const store = require('../../../utils/botStateStore');
 
 const API_URL = process.env.API_URL || 'http://localhost:5000/api/v1';
-
-// Store registration states globally (in production, use Redis)
-if (!global.driverRegistrations) {
-  global.driverRegistrations = new Map();
-}
 
 /**
  * Handle /start command
@@ -22,12 +18,10 @@ const handleStart = (bot) => async (msg) => {
   const username = msg.from.username || '';
 
   try {
-    // Check if driver exists
     try {
       const response = await axios.get(`${API_URL}/drivers/telegram/${telegramId}`);
       const driver = response.data.data.driver;
 
-      // Check driver status
       if (driver.status === 'pending') {
         await bot.sendMessage(chatId, MESSAGES.uz.registrationPending);
         return;
@@ -39,7 +33,6 @@ const handleStart = (bot) => async (msg) => {
         return;
       }
 
-      // Welcome back active driver
       await bot.sendMessage(
         chatId,
         MESSAGES.uz.welcomeBack(firstName),
@@ -52,7 +45,6 @@ const handleStart = (bot) => async (msg) => {
       logger.info(`Driver ${telegramId} logged in`);
     } catch (error) {
       if (error.response?.status === 404) {
-        // Driver not found, start registration
         await bot.sendMessage(
           chatId,
           MESSAGES.uz.welcome(firstName),
@@ -61,7 +53,6 @@ const handleStart = (bot) => async (msg) => {
         
         await bot.sendMessage(chatId, MESSAGES.uz.notRegistered);
         
-        // Request phone number
         await bot.sendMessage(
           chatId,
           MESSAGES.uz.requestPhone,
@@ -76,8 +67,8 @@ const handleStart = (bot) => async (msg) => {
           }
         );
 
-        // Initialize registration state
-        global.driverRegistrations.set(chatId, {
+        // Ro'yxatdan o'tish holatini Redis'da saqlash
+        await store.setDriverReg(chatId, {
           telegramId,
           firstName,
           lastName,
@@ -102,7 +93,7 @@ const handleContact = (bot) => async (msg) => {
   const phone = msg.contact.phone_number;
 
   try {
-    const regState = global.driverRegistrations.get(chatId);
+    const regState = await store.getDriverReg(chatId);
     
     if (!regState || regState.step !== 'phone') {
       return;
@@ -113,12 +104,10 @@ const handleContact = (bot) => async (msg) => {
       return;
     }
 
-    // Update registration state
     regState.phone = phone;
     regState.step = 'vehicleType';
-    global.driverRegistrations.set(chatId, regState);
+    await store.setDriverReg(chatId, regState);
 
-    // Request vehicle type
     await bot.sendMessage(
       chatId,
       MESSAGES.uz.phoneReceived + '\n\n' + MESSAGES.uz.requestVehicleType,
@@ -143,22 +132,19 @@ const handleVehicleTypeCallback = async (bot, callbackQuery) => {
   const vehicleType = callbackQuery.data.split(':')[1];
 
   try {
-    const regState = global.driverRegistrations.get(chatId);
+    const regState = await store.getDriverReg(chatId);
     
     if (!regState || regState.step !== 'vehicleType') {
       await bot.answerCallbackQuery(callbackQuery.id, { text: '❌ Xatolik yuz berdi' });
       return;
     }
 
-    // Update registration state
     regState.vehicleType = vehicleType;
     regState.step = 'vehicleModel';
-    global.driverRegistrations.set(chatId, regState);
+    await store.setDriverReg(chatId, regState);
 
-    // Delete previous message
     await bot.deleteMessage(chatId, messageId);
 
-    // Request vehicle model
     await bot.sendMessage(
       chatId,
       MESSAGES.uz.requestVehicleModel,
@@ -185,17 +171,16 @@ const handleTextMessage = (bot) => async (msg) => {
   const text = msg.text;
 
   try {
-    const regState = global.driverRegistrations.get(chatId);
+    const regState = await store.getDriverReg(chatId);
     
     if (!regState) {
       return;
     }
 
     if (regState.step === 'vehicleModel') {
-      // Save vehicle model
       regState.vehicleModel = text.trim();
       regState.step = 'plateNumber';
-      global.driverRegistrations.set(chatId, regState);
+      await store.setDriverReg(chatId, regState);
 
       await bot.sendMessage(
         chatId,
@@ -207,7 +192,6 @@ const handleTextMessage = (bot) => async (msg) => {
         }
       );
     } else if (regState.step === 'plateNumber') {
-      // Save plate number
       if (!validatePlateNumber(text)) {
         await bot.sendMessage(chatId, '❌ Avtomobil raqami noto\'g\'ri. Qaytadan kiriting.');
         return;
@@ -215,11 +199,10 @@ const handleTextMessage = (bot) => async (msg) => {
 
       regState.plateNumber = text.trim().toUpperCase();
       regState.step = 'licensePhoto';
-      global.driverRegistrations.set(chatId, regState);
+      await store.setDriverReg(chatId, regState);
 
       await bot.sendMessage(chatId, MESSAGES.uz.requestLicensePhoto);
     } else if (regState.step === 'customRejectionReason') {
-      // This will be handled in orders handler
       return;
     }
 
@@ -237,27 +220,23 @@ const handlePhotoMessage = async (bot, msg) => {
   const chatId = msg.chat.id;
 
   try {
-    const regState = global.driverRegistrations.get(chatId);
+    const regState = await store.getDriverReg(chatId);
     
     if (!regState) {
       return;
     }
 
     if (regState.step === 'licensePhoto') {
-      // Save license photo file_id
-      const photo = msg.photo[msg.photo.length - 1]; // Get highest resolution
+      const photo = msg.photo[msg.photo.length - 1];
       regState.licensePhoto = photo.file_id;
       regState.step = 'vehiclePhoto';
-      global.driverRegistrations.set(chatId, regState);
+      await store.setDriverReg(chatId, regState);
 
       await bot.sendMessage(chatId, MESSAGES.uz.requestVehiclePhoto);
       logger.info(`Driver ${regState.telegramId} license photo received`);
     } else if (regState.step === 'vehiclePhoto') {
-      // Save vehicle photo file_id
       const photo = msg.photo[msg.photo.length - 1];
       regState.vehiclePhoto = photo.file_id;
-      
-      // Complete registration - submit to backend
       await completeRegistration(bot, chatId, regState);
     }
   } catch (error) {
@@ -271,7 +250,6 @@ const handlePhotoMessage = async (bot, msg) => {
  */
 const completeRegistration = async (bot, chatId, regState) => {
   try {
-    // Create driver in database
     const driverData = {
       telegramId: regState.telegramId,
       firstName: regState.firstName,
@@ -288,10 +266,9 @@ const completeRegistration = async (bot, chatId, regState) => {
 
     await axios.post(`${API_URL}/drivers/register`, driverData);
 
-    // Clear registration state
-    global.driverRegistrations.delete(chatId);
+    // Ro'yxatdan o'tish holatini o'chirish
+    await store.delDriverReg(chatId);
 
-    // Send confirmation
     await bot.sendMessage(
       chatId,
       MESSAGES.uz.registrationComplete,

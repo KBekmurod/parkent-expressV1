@@ -1,3 +1,4 @@
+const store = require('../../../utils/botStateStore');
 const axios = require('axios');
 const path = require('path');
 const fs = require('fs').promises;
@@ -11,14 +12,10 @@ const logger = require('../../../utils/logger');
 const API_URL = process.env.API_URL || 'http://localhost:5000/api/v1';
 
 // Store product creation states
-if (!global.productCreationStates) {
-  global.productCreationStates = new Map();
-}
+
 
 // Store product edit states
-if (!global.productEditStates) {
-  global.productEditStates = new Map();
-}
+
 
 /**
  * Show menu/products
@@ -136,7 +133,7 @@ const handleProductCallback = async (bot, callbackQuery) => {
  * Start product creation flow
  */
 const startProductCreation = async (bot, chatId, vendorId) => {
-  global.productCreationStates.set(chatId, {
+  store.setProductCreate(chatId, {
     vendorId,
     step: 'name_uz',
     data: {}
@@ -158,8 +155,8 @@ const handleTextMessage = async (bot, msg) => {
   const chatId = msg.chat.id;
   const text = msg.text;
   
-  const creationState = global.productCreationStates.get(chatId);
-  const editState = global.productEditStates.get(chatId);
+  const creationState = await store.getProductCreate(chatId);
+  const editState = await store.getProductEdit(chatId);
 
   if (creationState) {
     await handleProductCreationStep(bot, msg, creationState);
@@ -180,7 +177,7 @@ const handleProductCreationStep = async (bot, msg, state) => {
     if (step === 'name_uz') {
       state.data.name = { uz: text.trim() };
       state.step = 'name_ru';
-      global.productCreationStates.set(chatId, state);
+      store.setProductCreate(chatId, state);
       
       await bot.sendMessage(
         chatId,
@@ -195,7 +192,7 @@ const handleProductCreationStep = async (bot, msg, state) => {
         state.data.name.ru = text.trim();
       }
       state.step = 'price';
-      global.productCreationStates.set(chatId, state);
+      store.setProductCreate(chatId, state);
       
       await bot.sendMessage(
         chatId,
@@ -213,13 +210,13 @@ const handleProductCreationStep = async (bot, msg, state) => {
       
       state.data.price = price;
       state.step = 'category';
-      global.productCreationStates.set(chatId, state);
+      store.setProductCreate(chatId, state);
       
       await bot.sendMessage(chatId, MESSAGES.uz.enterProductCategory);
     } else if (step === 'category') {
       state.data.category = text.trim();
       state.step = 'preparation_time';
-      global.productCreationStates.set(chatId, state);
+      store.setProductCreate(chatId, state);
       
       await bot.sendMessage(chatId, MESSAGES.uz.enterPreparationTime);
     } else if (step === 'preparation_time') {
@@ -231,7 +228,7 @@ const handleProductCreationStep = async (bot, msg, state) => {
       
       state.data.preparationTime = time;
       state.step = 'description_uz';
-      global.productCreationStates.set(chatId, state);
+      store.setProductCreate(chatId, state);
       
       await bot.sendMessage(
         chatId,
@@ -246,7 +243,7 @@ const handleProductCreationStep = async (bot, msg, state) => {
         state.data.description = { uz: text.trim() };
       }
       state.step = 'description_ru';
-      global.productCreationStates.set(chatId, state);
+      store.setProductCreate(chatId, state);
       
       await bot.sendMessage(
         chatId,
@@ -264,7 +261,7 @@ const handleProductCreationStep = async (bot, msg, state) => {
         state.data.description.ru = text.trim();
       }
       state.step = 'photo';
-      global.productCreationStates.set(chatId, state);
+      store.setProductCreate(chatId, state);
       
       await bot.sendMessage(
         chatId,
@@ -296,8 +293,8 @@ const handlePhotoMessage = async (bot, msg) => {
   
   try {
     // Check if user is in product creation flow
-    const createState = global.productCreationStates?.get(chatId);
-    const editState = global.productEditStates?.get(chatId);
+    const createState = await store.getProductCreate(chatId);
+    const editState = await store.getProductEdit(chatId);
     
     if (!createState && !editState) {
       // Not in photo upload flow, ignore
@@ -366,7 +363,7 @@ const handlePhotoMessage = async (bot, msg) => {
       fsSync.unlinkSync(tempPath);
 
       // Clear state
-      global.productCreationStates.delete(chatId);
+      await store.delProductCreate(chatId);
 
       await bot.sendMessage(
         chatId,
@@ -399,7 +396,7 @@ const handlePhotoMessage = async (bot, msg) => {
 
       // Clean up
       fsSync.unlinkSync(tempPath);
-      global.productEditStates.delete(chatId);
+      await store.delProductEdit(chatId);
 
       await bot.sendMessage(chatId, '✅ Rasm yangilandi!');
       logger.info(`Product photo updated: ${editState.productId}`);
@@ -438,8 +435,8 @@ const handlePhotoMessage = async (bot, msg) => {
     );
 
     // Clear states
-    global.productCreationStates?.delete(chatId);
-    global.productEditStates?.delete(chatId);
+    await store.delProductCreate(chatId);
+    await store.delProductEdit(chatId);
   }
 };
 
@@ -464,7 +461,7 @@ const completeProductCreation = async (bot, chatId, state) => {
     // TODO: Upload photo if provided (requires file upload implementation)
 
     // Clear state
-    global.productCreationStates.delete(chatId);
+    await store.delProductCreate(chatId);
 
     // Send confirmation
     const productName = product.name?.uz || product.name;
@@ -489,7 +486,7 @@ const completeProductCreation = async (bot, chatId, state) => {
     await bot.sendMessage(chatId, errorMessage);
     
     // Clear state
-    global.productCreationStates.delete(chatId);
+    await store.delProductCreate(chatId);
   }
 };
 

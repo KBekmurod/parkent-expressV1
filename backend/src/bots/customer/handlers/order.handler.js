@@ -1,7 +1,7 @@
 const axios = require('axios');
 const { MESSAGES } = require('../utils/messages');
 const { PAYMENT_MESSAGES } = require('../utils/paymentMessages');
-const { userCarts } = require('./vendor.handler');
+const store = require('../../../utils/botStateStore');
 const logger = require('../../../utils/logger');
 const paymentHandler = require('./payment.handler');
 
@@ -12,7 +12,7 @@ const API_URL = process.env.API_URL || 'http://localhost:5000/api/v1';
  */
 const createOrder = async (bot, chatId, userId, deliveryAddress, paymentMethod = 'cash') => {
   try {
-    const cart = userCarts.get(chatId) || [];
+    const cart = (await store.getBotCart(chatId)) || [];
 
     if (cart.length === 0) {
       return await bot.sendMessage(chatId, MESSAGES.uz.emptyCart);
@@ -39,8 +39,8 @@ const createOrder = async (bot, chatId, userId, deliveryAddress, paymentMethod =
 
     const order = orderResponse.data.data.order;
 
-    // Clear cart
-    userCarts.delete(chatId);
+    // Savatni tozalash
+    await store.delBotCart(chatId);
 
     // Send confirmation
     let message = '✅ *Buyurtma qabul qilindi!*\n\n';

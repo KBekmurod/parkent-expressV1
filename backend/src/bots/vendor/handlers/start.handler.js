@@ -1,4 +1,5 @@
 const axios = require('axios');
+const store = require("../../../utils/botStateStore");
 const { getMainMenuKeyboard, getCategoryKeyboard } = require('../keyboards/mainMenu');
 const { MESSAGES } = require('../utils/messages');
 const { isValidWorkingHours, parseWorkingHours, getVendorStatusText } = require('../utils/helpers');
@@ -7,9 +8,7 @@ const logger = require('../../../utils/logger');
 const API_URL = process.env.API_URL || 'http://localhost:5000/api/v1';
 
 // Store registration states globally (in production, use Redis)
-if (!global.vendorRegistrations) {
-  global.vendorRegistrations = new Map();
-}
+
 
 /**
  * Handle /start command
@@ -77,7 +76,7 @@ const handleStart = (bot) => async (msg) => {
         );
 
         // Initialize registration state
-        global.vendorRegistrations.set(chatId, {
+        store.setVendorReg(chatId, {
           telegramId,
           firstName,
           lastName,
@@ -100,7 +99,7 @@ const handleStart = (bot) => async (msg) => {
 const handleContact = (bot) => async (msg) => {
   const chatId = msg.chat.id;
   const phone = msg.contact.phone_number;
-  const registrationState = global.vendorRegistrations.get(chatId);
+  const registrationState = await store.getVendorReg(chatId);
 
   if (!registrationState || registrationState.step !== 'phone') {
     return;
@@ -109,7 +108,7 @@ const handleContact = (bot) => async (msg) => {
   try {
     registrationState.phone = phone;
     registrationState.step = 'location';
-    global.vendorRegistrations.set(chatId, registrationState);
+    store.setVendorReg(chatId, registrationState);
 
     await bot.sendMessage(chatId, MESSAGES.uz.phoneReceived);
     
@@ -141,7 +140,7 @@ const handleContact = (bot) => async (msg) => {
 const handleLocationMessage = async (bot, msg) => {
   const chatId = msg.chat.id;
   const location = msg.location;
-  const registrationState = global.vendorRegistrations.get(chatId);
+  const registrationState = await store.getVendorReg(chatId);
 
   if (!registrationState || registrationState.step !== 'location') {
     return;
@@ -153,7 +152,7 @@ const handleLocationMessage = async (bot, msg) => {
       lng: location.longitude
     };
     registrationState.step = 'name';
-    global.vendorRegistrations.set(chatId, registrationState);
+    store.setVendorReg(chatId, registrationState);
 
     await bot.sendMessage(chatId, MESSAGES.uz.locationReceived);
     
@@ -179,7 +178,7 @@ const handleLocationMessage = async (bot, msg) => {
 const handleTextMessage = (bot) => async (msg) => {
   const chatId = msg.chat.id;
   const text = msg.text;
-  const registrationState = global.vendorRegistrations.get(chatId);
+  const registrationState = await store.getVendorReg(chatId);
 
   if (!registrationState) {
     return;
@@ -192,7 +191,7 @@ const handleTextMessage = (bot) => async (msg) => {
       // Save business name
       registrationState.name = text.trim();
       registrationState.step = 'category';
-      global.vendorRegistrations.set(chatId, registrationState);
+      store.setVendorReg(chatId, registrationState);
 
       // Request category
       await bot.sendMessage(
@@ -207,7 +206,7 @@ const handleTextMessage = (bot) => async (msg) => {
       const category = text.replace(/[^\w\s-]/gi, '').trim();
       registrationState.category = category;
       registrationState.step = 'description';
-      global.vendorRegistrations.set(chatId, registrationState);
+      store.setVendorReg(chatId, registrationState);
 
       // Request description
       await bot.sendMessage(
@@ -230,7 +229,7 @@ const handleTextMessage = (bot) => async (msg) => {
         registrationState.description = text.trim();
       }
       registrationState.step = 'workingHours';
-      global.vendorRegistrations.set(chatId, registrationState);
+      store.setVendorReg(chatId, registrationState);
 
       // Request working hours
       await bot.sendMessage(
@@ -280,7 +279,7 @@ const completeRegistration = async (bot, chatId, registrationData) => {
     });
 
     // Clear registration state
-    global.vendorRegistrations.delete(chatId);
+    await store.delVendorReg(chatId);
 
     // Send confirmation
     await bot.sendMessage(
@@ -301,7 +300,7 @@ const completeRegistration = async (bot, chatId, registrationData) => {
     await bot.sendMessage(chatId, errorMessage);
     
     // Clear registration state on error
-    global.vendorRegistrations.delete(chatId);
+    await store.delVendorReg(chatId);
   }
 };
 

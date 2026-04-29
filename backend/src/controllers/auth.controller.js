@@ -181,7 +181,7 @@ const updatePassword = asyncHandler(async (req, res, next) => {
 });
 
 /**
- * @desc    Register new web customer
+ * @desc    Web mijozni ro'yxatdan o'tkazish
  * @route   POST /api/v1/auth/web/register
  * @access  Public
  */
@@ -196,27 +196,29 @@ const webRegister = asyncHandler(async (req, res, next) => {
     return next(new AppError('PIN 4 xonali raqam bo\'lishi kerak', 400));
   }
 
-  // Check if web user with this phone already exists
-  const existingUser = await User.findOne({ phone, telegramId: { $gte: 'web_', $lt: 'web`' } });
+  // Mavjudligini tekshirish (webPhone maydoni bo'yicha)
+  const existingUser = await User.findOne({ webPhone: phone });
   if (existingUser) {
     return next(new AppError('Bu telefon raqam allaqachon ro\'yxatdan o\'tgan', 400));
   }
 
-  // Hash PIN
+  // PIN ni hash qilish
   const hashedPin = await bcrypt.hash(pin, 10);
 
-  // Create web user (telegramId uses web_ prefix to distinguish from bot users)
+  // Web foydalanuvchi yaratish (webPhone — alohida maydon)
   const user = await User.create({
-    telegramId: `web_${phone}`,
+    webPhone: phone,
+    phone,
     firstName: firstName || 'Foydalanuvchi',
     lastName: lastName || '',
-    phone,
-    webPin: hashedPin
+    webPin: hashedPin,
+    authType: 'web'
+    // telegramId yo'q — bu web foydalanuvchi
   });
 
   const token = generateToken(user._id);
 
-  logger.info(`New web user registered: ${phone}`);
+  logger.info(`Yangi web foydalanuvchi ro'yxatdan o'tdi: ${phone}`);
 
   res.status(201).json({
     success: true,
@@ -234,7 +236,7 @@ const webRegister = asyncHandler(async (req, res, next) => {
 });
 
 /**
- * @desc    Login web customer
+ * @desc    Web mijozni tizimga kiritish
  * @route   POST /api/v1/auth/web/login
  * @access  Public
  */
@@ -249,8 +251,8 @@ const webLogin = asyncHandler(async (req, res, next) => {
     return next(new AppError('PIN 4 xonali raqam bo\'lishi kerak', 400));
   }
 
-  // Find web user by phone (only web-registered users have web_ telegramId prefix)
-  const user = await User.findOne({ phone, telegramId: { $gte: 'web_', $lt: 'web`' } }).select('+webPin');
+  // webPhone maydoni bo'yicha web foydalanuvchini topish
+  const user = await User.findOne({ webPhone: phone }).select('+webPin');
 
   if (!user) {
     return next(new AppError('Foydalanuvchi topilmadi. Avval ro\'yxatdan o\'ting', 404));
@@ -271,7 +273,7 @@ const webLogin = asyncHandler(async (req, res, next) => {
 
   const token = generateToken(user._id);
 
-  logger.info(`Web user logged in: ${phone}`);
+  logger.info(`Web foydalanuvchi kirdi: ${phone}`);
 
   res.status(200).json({
     success: true,

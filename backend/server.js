@@ -10,6 +10,7 @@ const logger = require('./src/utils/logger');
 const { errorHandler, notFound } = require('./src/middleware/error.middleware');
 const { apiLimiter } = require('./src/middleware/rateLimit.middleware');
 const { initSocket } = require('./src/socket');
+const { connectRedis } = require('./src/utils/redis');
 
 const app = express();
 app.set('trust proxy', 1);
@@ -17,6 +18,9 @@ const server = http.createServer(app);
 
 // Connect to MongoDB
 connectDB();
+
+// Connect to Redis (optional — fallback to in-memory if not configured)
+connectRedis();
 
 // Initialize Socket.io
 const io = initSocket(server);
@@ -85,7 +89,7 @@ app.use('/api/v1/categories', require('./src/routes/category.routes'));
 app.use('/api/v1/transactions', require('./src/routes/transaction.routes'));
 app.use('/api/v1/stats', require('./src/routes/stats.routes'));
 app.use('/api/v1/card-payments', require('./src/routes/cardPayment.routes'));
-// app.use('/api/v1/admin', require('./src/routes/admin.routes'));
+app.use('/api/v1/admin', require('./src/routes/admin.routes'));
 
 // 404 handler
 app.use(notFound);
@@ -93,42 +97,37 @@ app.use(notFound);
 // Global error handler
 app.use(errorHandler);
 
-// Start server
+// Start server (test rejimida listen qilinmaydi)
 const PORT = process.env.PORT || 5000;
-server.listen(PORT, () => {
-  logger.info(`🚀 Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
-  logger.info(`🔌 Socket.io ready for connections`);
-  console.log(`🚀 Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
-  console.log(`🔌 Socket.io ready for connections`);
-  
-  // Initialize Telegram Bots
-  const { initCustomerBot } = require('./src/bots/customer');
-  const { initVendorBot } = require('./src/bots/vendor');
-  const { initDriverBot } = require('./src/bots/driver');
-  
-  const customerBot = initCustomerBot();
-  if (customerBot) {
-    logger.info('✅ Customer Bot started');
-    console.log('✅ Customer Bot started');
-  }
-  
-  const vendorBot = initVendorBot();
-  if (vendorBot) {
-    logger.info('✅ Vendor Bot started');
-    console.log('✅ Vendor Bot started');
-  }
-  
-  const driverBot = initDriverBot();
-  if (driverBot) {
-    logger.info('✅ Driver Bot started');
-    console.log('✅ Driver Bot started');
-    
-    // Initialize settlement reminder cron job
-    const settlementReminderJob = require('./src/jobs/settlementReminder.job');
-    settlementReminderJob.initializeBot(driverBot);
-    settlementReminderJob.startSettlementReminder();
-  }
-});
+
+if (process.env.NODE_ENV !== 'test') {
+  server.listen(PORT, () => {
+    logger.info(`🚀 Server ${process.env.NODE_ENV || 'development'} rejimida ${PORT}-portda ishga tushdi`);
+    logger.info(`🔌 Socket.io tayyor`);
+    console.log(`🚀 Server running on port ${PORT}`);
+
+    // Telegram botlarni ishga tushirish
+    const { initCustomerBot } = require('./src/bots/customer');
+    const { initVendorBot } = require('./src/bots/vendor');
+    const { initDriverBot } = require('./src/bots/driver');
+
+    const customerBot = initCustomerBot();
+    if (customerBot) logger.info('✅ Customer Bot started');
+
+    const vendorBot = initVendorBot();
+    if (vendorBot) logger.info('✅ Vendor Bot started');
+
+    const driverBot = initDriverBot();
+    if (driverBot) {
+      logger.info('✅ Driver Bot started');
+
+      // Settlement reminder cron job
+      const settlementReminderJob = require('./src/jobs/settlementReminder.job');
+      settlementReminderJob.initializeBot(driverBot);
+      settlementReminderJob.startSettlementReminder();
+    }
+  });
+}
 
 // Handle unhandled promise rejections
 process.on('unhandledRejection', (err) => {
@@ -153,4 +152,5 @@ process.on('SIGTERM', () => {
   });
 });
 
-module.exports = server;
+module.exports = app;
+module.exports.server = server;

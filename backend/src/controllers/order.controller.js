@@ -7,6 +7,8 @@ const { asyncHandler } = require('../middleware/error.middleware');
 const { AppError } = require('../middleware/error.middleware');
 const logger = require('../utils/logger');
 const { PLATFORM_CONFIG, ORDER_STATUS } = require('../config/constants');
+const { autoAssignDriver, calcDeliveryFee, haversineKm } = require('../services/autoAssign.service');
+const { notifyCustomer, notifyVendorNewOrder, notifyDriverNewAssignment } = require('../services/notification.service');
 
 /**
  * Generate unique order number
@@ -71,7 +73,34 @@ const createOrder = asyncHandler(async (req, res, next) => {
   }
 
   if (vendorExists.status !== 'active' || !vendorExists.isOpen) {
-    return next(new AppError('Vendor is not available', 400));
+    return next(new AppError('Restoran hozir buyurtma qabul qilmaydi', 400));
+  }
+
+  // Restoran ish vaqtini tekshirish (Toshkent vaqti, UTC+5)
+  if (vendorExists.workingHours?.start && vendorExists.workingHours?.end) {
+    const now = new Date();
+    // Toshkent vaqti: UTC + 5 soat
+    const tashkentMinutes = (now.getUTCHours() * 60 + now.getUTCMinutes() + 5 * 60) % (24 * 60);
+    const [startH, startM] = vendorExists.workingHours.start.split(':').map(Number);
+    const [endH, endM] = vendorExists.workingHours.end.split(':').map(Number);
+    const startMin = startH * 60 + startM;
+    const endMin = endH * 60 + endM;
+
+    let isWorking;
+    if (startMin <= endMin) {
+      // Oddiy: masalan 09:00 - 22:00
+      isWorking = tashkentMinutes >= startMin && tashkentMinutes <= endMin;
+    } else {
+      // Tunni o'tib ketadigan: masalan 18:00 - 02:00
+      isWorking = tashkentMinutes >= startMin || tashkentMinutes <= endMin;
+    }
+
+    if (!isWorking) {
+      return next(new AppError(
+        `Restoran ish vaqti: ${vendorExists.workingHours.start} - ${vendorExists.workingHours.end}. Hozir yopiq.`,
+        400
+      ));
+    }
   }
 
   // Validate products and calculate total
@@ -82,11 +111,19 @@ const createOrder = asyncHandler(async (req, res, next) => {
     const product = await Product.findById(item.product);
     
     if (!product) {
-      return next(new AppError(`Product ${item.product} not found`, 404));
+      return next(new AppError(`Mahsulot ${item.product} topilmadi`, 404));
     }
 
     if (!product.isAvailable) {
-      return next(new AppError(`Product ${product.name.uz} is not available`, 400));
+      return next(new AppError(`"${product.name?.uz || product.name}" mahsuloti hozir mavjud emas`, 400));
+    }
+
+    // Mahsulot ushbu restoranga tegishli ekanligini tekshirish
+    if (product.vendor.toString() !== vendor.toString()) {
+      return next(new AppError(
+        `"${product.name?.uz || product.name}" mahsuloti boshqa restoranga tegishli`,
+        400
+      ));
     }
 
     const itemPrice = product.getDiscountedPrice();
@@ -100,10 +137,33 @@ const createOrder = asyncHandler(async (req, res, next) => {
     subtotal += itemPrice * item.quantity;
   }
 
-  // Calculate delivery fee (simple flat rate for now)
-  const deliveryFee = PLATFORM_CONFIG.DEFAULT_DELIVERY_FEE;
+  // Minimal buyurtma summasini tekshirish
+  if (subtotal < PLATFORM_CONFIG.MIN_ORDER_AMOUNT) {
+    return next(new AppError(
+      `Minimal buyurtma summasi ${PLATFORM_CONFIG.MIN_ORDER_AMOUNT.toLocaleString()} so'm. Sizning buyurtmangiz: ${subtotal.toLocaleString()} so'm`,
+      400
+    ));
+  }
 
-  // Calculate total
+  // Yetkazib berish narxini dinamik hisoblash
+  let deliveryFee = PLATFORM_CONFIG.DEFAULT_DELIVERY_FEE;
+
+  if (
+    deliveryAddress?.location?.lat &&
+    deliveryAddress?.location?.lng &&
+    vendorExists.location?.lat &&
+    vendorExists.location?.lng
+  ) {
+    const distKm = haversineKm(
+      vendorExists.location.lat,
+      vendorExists.location.lng,
+      deliveryAddress.location.lat,
+      deliveryAddress.location.lng
+    );
+    deliveryFee = calcDeliveryFee(distKm);
+  }
+
+  // Jami narx
   const total = subtotal + deliveryFee;
 
   // Create order with retry logic to handle order number collisions
@@ -128,14 +188,27 @@ const createOrder = asyncHandler(async (req, res, next) => {
 
   // Populate order
   await order.populate([
-    { path: 'customer', select: 'firstName lastName phone' },
-    { path: 'vendor', select: 'name phone address location' },
+    { path: 'customer', select: 'firstName lastName phone telegramId authType' },
+    { path: 'vendor', select: 'name phone address location telegramId' },
     { path: 'items.product', select: 'name photo price' }
   ]);
 
+  // Vendor'ga Telegram orqali yangi buyurtma haqida xabar yuborish (background)
+  notifyVendorNewOrder(order).catch(err => logger.warn('Vendor notify error:', err.message));
+
+  // Mijozga buyurtma qabul qilingani haqida xabar (background)
+  notifyCustomer(order, 'pending').catch(err => logger.warn('Customer notify error:', err.message));
+
+  // Socket.io orqali real-time bildirishnoma
+  const io = req.app.get('io');
+  if (io) {
+    io.to(`vendor:${vendor}`).emit('order:new', { order });
+    io.to(`customer:${customer}`).emit('order:created', { order });
+  }
+
   res.status(201).json({
     success: true,
-    message: 'Order created successfully',
+    message: 'Buyurtma muvaffaqiyatli yaratildi',
     data: { order }
   });
 });
@@ -283,10 +356,9 @@ const updateOrderStatus = asyncHandler(async (req, res, next) => {
   const order = await Order.findById(req.params.id);
 
   if (!order) {
-    return next(new AppError('Order not found', 404));
+    return next(new AppError('Buyurtma topilmadi', 404));
   }
 
-  // Validate status transition
   const validStatuses = [
     'pending', 'accepted', 'preparing', 'ready',
     'assigned', 'picked_up', 'on_the_way',
@@ -294,91 +366,139 @@ const updateOrderStatus = asyncHandler(async (req, res, next) => {
   ];
 
   if (!validStatuses.includes(status)) {
-    return next(new AppError('Invalid status', 400));
+    return next(new AppError('Noto\'g\'ri holat', 400));
+  }
+
+  // Status o'tishi qoidalarini tekshirish
+  const VALID_TRANSITIONS = {
+    pending:    ['accepted', 'rejected', 'cancelled'],
+    accepted:   ['preparing', 'cancelled'],
+    preparing:  ['ready', 'cancelled'],
+    ready:      ['assigned', 'cancelled'],
+    assigned:   ['picked_up', 'cancelled'],
+    picked_up:  ['on_the_way'],
+    on_the_way: ['delivered'],
+    delivered:  [],
+    cancelled:  [],
+    rejected:   []
+  };
+
+  if (!VALID_TRANSITIONS[order.status]?.includes(status)) {
+    return next(new AppError(
+      `"${order.status}" holatidan "${status}" holatiga o'tib bo'lmaydi`,
+      400
+    ));
   }
 
   order.status = status;
-
-  // Timeline is automatically updated by pre-save hook
-
   await order.save();
 
-  // Update vendor total orders on delivery
-  if (status === ORDER_STATUS.DELIVERED) {
-    const vendor = await Vendor.findById(order.vendor);
-    vendor.totalOrders += 1;
-    await vendor.save();
-
-    // Update driver stats
-    if (order.driver) {
-      const driver = await Driver.findById(order.driver);
-      driver.totalDeliveries += 1;
-      // Remove from current orders
-      driver.currentOrders = driver.currentOrders.filter(
-        orderId => orderId.toString() !== order._id.toString()
-      );
-      await driver.save();
+  // Buyurtma "ready" bo'lganda avtomatik haydovchi biriktirish
+  if (status === ORDER_STATUS.READY) {
+    const io = req.app.get('io');
+    await order.populate('vendor', 'location name');
+    const assignedDriver = await autoAssignDriver(order, io);
+    if (assignedDriver) {
+      logger.info(`Auto-assign: ${assignedDriver.firstName} → order ${order._id}`);
+    } else {
+      logger.warn(`Auto-assign: ${order._id} uchun bo'sh haydovchi topilmadi`);
     }
   }
 
-  logger.info(`Order status updated: ${order._id} - ${status}`);
+  // Yetkazilganda statistikani yangilash
+  if (status === ORDER_STATUS.DELIVERED) {
+    await Vendor.findByIdAndUpdate(order.vendor, { $inc: { totalOrders: 1 } });
+
+    if (order.driver) {
+      await Driver.findByIdAndUpdate(order.driver, {
+        $inc: { totalDeliveries: 1 },
+        $pull: { currentOrders: order._id }
+      });
+    }
+  }
+
+  // Rad etilganda yoki bekor qilinganda — haydovchidan ham o'chirish
+  if ([ORDER_STATUS.REJECTED, ORDER_STATUS.CANCELLED].includes(status)) {
+    if (order.driver) {
+      await Driver.findByIdAndUpdate(order.driver, {
+        $pull: { currentOrders: order._id }
+      });
+    }
+  }
+
+  logger.info(`Order status: ${order._id} → ${status}`);
 
   await order.populate([
-    { path: 'customer', select: 'firstName lastName phone' },
+    { path: 'customer', select: 'firstName lastName phone telegramId authType' },
     { path: 'vendor', select: 'name phone' },
     { path: 'driver', select: 'firstName lastName phone vehicle' }
   ]);
 
+  // Mijozga Telegram orqali bildirishnoma (background, fail qilsa ham order o'zgaradi)
+  notifyCustomer(order, status).catch(err =>
+    logger.warn('notifyCustomer error:', err.message)
+  );
+
+  // Socket.io orqali barcha tomonlarga real-time bildirishnoma
+  const broadcast = require('../socket/utils/broadcast');
+  broadcast.broadcastOrderStatus(order._id.toString(), status, order);
+
   res.status(200).json({
     success: true,
-    message: 'Order status updated successfully',
+    message: 'Buyurtma holati yangilandi',
     data: { order }
   });
 });
 
 /**
- * @desc    Assign driver to order
+ * @desc    Buyurtmaga haydovchi biriktirish (admin qo'lda)
  * @route   PUT /api/v1/orders/:id/assign-driver
- * @access  Private (Admin or Auto-assign system)
+ * @access  Private (Admin)
  */
 const assignDriver = asyncHandler(async (req, res, next) => {
   const { driverId } = req.body;
+  const { tryAssignDriverAtomic } = require('../services/autoAssign.service');
 
   const order = await Order.findById(req.params.id);
 
   if (!order) {
-    return next(new AppError('Order not found', 404));
+    return next(new AppError('Buyurtma topilmadi', 404));
   }
 
   if (order.status !== ORDER_STATUS.READY) {
-    return next(new AppError('Order must be in ready status to assign driver', 400));
+    return next(new AppError('Buyurtma "ready" holatida bo\'lishi kerak', 400));
   }
 
-  // Validate driver
-  const driver = await Driver.findById(driverId);
-
-  if (!driver) {
-    return next(new AppError('Driver not found', 404));
+  if (order.driver) {
+    return next(new AppError('Buyurtmaga allaqachon haydovchi biriktirilgan', 400));
   }
 
-  if (driver.status !== 'active' || !driver.isOnline) {
-    return next(new AppError('Driver is not available', 400));
+  // Atomic tarzda haydovchini biriktirish (race-safe)
+  const success = await tryAssignDriverAtomic(driverId, order._id);
+
+  if (!success) {
+    return next(new AppError(
+      'Haydovchi mavjud emas yoki maksimal buyurtmalar soniga yetdi',
+      400
+    ));
   }
 
-  if (driver.currentOrders.length >= PLATFORM_CONFIG.MAX_DRIVER_ORDERS) {
-    return next(new AppError('Driver has maximum orders', 400));
-  }
-
-  // Assign driver
+  // Buyurtma holatini yangilash
   order.driver = driverId;
   order.status = ORDER_STATUS.ASSIGNED;
   await order.save();
 
-  // Add to driver's current orders
-  driver.currentOrders.push(order._id);
-  await driver.save();
+  logger.info(`Admin haydovchini biriktirdi: order ${order._id} → driver ${driverId}`);
 
-  logger.info(`Driver assigned to order: ${order._id} - Driver: ${driverId}`);
+  // Socket.io orqali bildirishnoma
+  const io = req.app.get('io');
+  if (io) {
+    io.to(`driver:${driverId}`).emit('order:new_assignment', {
+      orderId: order._id,
+      orderNumber: order.orderNumber,
+      message: 'Sizga yangi buyurtma biriktirildi!'
+    });
+  }
 
   await order.populate([
     { path: 'driver', select: 'firstName lastName phone vehicle currentLocation' }
@@ -413,13 +533,11 @@ const cancelOrder = asyncHandler(async (req, res, next) => {
   order.status = ORDER_STATUS.CANCELLED;
   await order.save();
 
-  // Remove from driver's current orders if assigned
+  // Haydovchining joriy buyurtmalar ro'yxatidan atomic o'chirish
   if (order.driver) {
-    const driver = await Driver.findById(order.driver);
-    driver.currentOrders = driver.currentOrders.filter(
-      orderId => orderId.toString() !== order._id.toString()
-    );
-    await driver.save();
+    await Driver.findByIdAndUpdate(order.driver, {
+      $pull: { currentOrders: order._id }
+    });
   }
 
   logger.info(`Order cancelled: ${order._id} - Reason: ${reason}`);

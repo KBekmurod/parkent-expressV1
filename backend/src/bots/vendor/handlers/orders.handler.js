@@ -3,13 +3,9 @@ const { MESSAGES } = require('../utils/messages');
 const { getOrderStatusActionKeyboard, getRejectReasonKeyboard } = require('../keyboards/orderMenu');
 const { formatPrice, formatDateTime, getOrderStatusText } = require('../utils/helpers');
 const logger = require('../../../utils/logger');
+const store = require('../../../utils/botStateStore');
 
 const API_URL = process.env.API_URL || 'http://localhost:5000/api/v1';
-
-// Store rejection reason inputs
-if (!global.orderRejectionInputs) {
-  global.orderRejectionInputs = new Map();
-}
 
 /**
  * Show active orders
@@ -139,8 +135,8 @@ const handleOrderCallback = async (bot, callbackQuery) => {
     } else if (action === 'reject_reason') {
       const reason = parts[3];
       if (reason === 'custom') {
-        // Ask for custom reason
-        global.orderRejectionInputs.set(chatId, orderId);
+        // Maxsus sabab so'rash
+        await store.setVendorReject(chatId, orderId);
         await bot.sendMessage(chatId, MESSAGES.uz.enterCustomReason);
       } else {
         await rejectOrder(bot, chatId, messageId, orderId, getReasonText(reason));
@@ -240,7 +236,7 @@ const rejectOrder = async (bot, chatId, messageId, orderId, reason) => {
 const handleRejectionReasonInput = async (bot, msg) => {
   const chatId = msg.chat.id;
   const text = msg.text;
-  const orderId = global.orderRejectionInputs.get(chatId);
+  const orderId = await store.getVendorReject(chatId);
 
   if (!orderId) {
     return;
@@ -248,7 +244,7 @@ const handleRejectionReasonInput = async (bot, msg) => {
 
   try {
     await rejectOrder(bot, chatId, null, orderId, text);
-    global.orderRejectionInputs.delete(chatId);
+    await store.delVendorReject(chatId);
   } catch (error) {
     logger.error('Error handling rejection reason:', error);
     await bot.sendMessage(chatId, MESSAGES.uz.error);

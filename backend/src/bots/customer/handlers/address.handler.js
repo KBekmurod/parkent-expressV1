@@ -1,3 +1,4 @@
+const store = require('../../../utils/botStateStore');
 const axios = require('axios');
 const { MESSAGES } = require('../utils/messages');
 const logger = require('../../../utils/logger');
@@ -74,8 +75,8 @@ const handleLocationMessage = async (bot, msg) => {
   // - Persistence across server restarts
   // - Multi-process environments
   // - Better scalability and reliability
-  global.pendingAddresses = global.pendingAddresses || new Map();
-  global.pendingAddresses.set(chatId, { lat: latitude, lng: longitude });
+  
+  store.setPendingAddress(chatId, { lat: latitude, lng: longitude });
 };
 
 /**

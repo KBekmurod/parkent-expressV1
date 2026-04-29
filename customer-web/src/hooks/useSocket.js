@@ -19,20 +19,33 @@ export function useSocket(userId, onOrderUpdate) {
     socketRef.current = io(SOCKET_URL, {
       transports: ['websocket', 'polling'],
       auth: token ? { token } : undefined,
+      reconnection: true,
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000,
     });
 
     const socket = socketRef.current;
 
     socket.on('connect', () => {
-      socket.emit('join', `customer:${userId}`);
+      // Server socketAuth orqali avtomatik customer:${userId} room'iga qo'shadi
+      // Qo'shimcha order:${orderId} room'lariga sahifa o'zi qo'shilishi mumkin
     });
 
-    socket.on('orderUpdated', (data) => {
+    // Backend'da yuboriladigan to'g'ri event nomlari
+    socket.on('order:update', (data) => {
       if (callbackRef.current) callbackRef.current(data);
     });
 
-    socket.on('orderStatusChanged', (data) => {
+    socket.on('order:status:changed', (data) => {
       if (callbackRef.current) callbackRef.current(data);
+    });
+
+    socket.on('notification', (data) => {
+      if (callbackRef.current) callbackRef.current(data);
+    });
+
+    socket.on('connect_error', (err) => {
+      console.error('Socket ulanish xatosi:', err.message);
     });
 
     return () => {
@@ -42,3 +55,4 @@ export function useSocket(userId, onOrderUpdate) {
 
   return socketRef.current;
 }
+

@@ -33,6 +33,8 @@ services:
     environment:
       - NODE_ENV=production
       - MONGODB_URI=mongodb://${MONGO_ROOT_USER}:${MONGO_ROOT_PASSWORD}@mongo:27017/parkent-express?authSource=admin
+      - REDIS_URL=redis://:${REDIS_PASSWORD}@redis:6379
+      - API_URL=https://${DOMAIN}/api/v1
     volumes:
       - ./backend/uploads:/app/uploads
     depends_on:
