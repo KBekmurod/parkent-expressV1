@@ -63,13 +63,52 @@ const register = asyncHandler(async (req, res, next) => {
 /**
  * @desc    Login admin
  * @route   POST /api/v1/auth/login
- * @route   POST /api/v1/auth/admin/login
  * @access  Public
  */
 const login = asyncHandler(async (req, res, next) => {
+  // ── DEV BYPASS ──────────────────────────────────────────────────────────
+  // .env da ADMIN_BYPASS=true bo'lsa parolsiz kirish mumkin
+  // Ishga tushirishdan oldin o'chirish yoki false qilish SHART
+  if (process.env.ADMIN_BYPASS === 'true') {
+    let admin = await Admin.findOne({ role: 'super_admin' });
+
+    // Agar hech qanday admin yo'q bo'lsa — avtomatik yaratish
+    if (!admin) {
+      admin = await Admin.create({
+        username: 'admin',
+        email: 'admin@parkent.uz',
+        password: 'bypass_temp_123',
+        firstName: 'Admin',
+        lastName: 'User',
+        role: 'super_admin',
+        isActive: true
+      });
+      logger.info('ADMIN_BYPASS: yangi admin avtomatik yaratildi');
+    }
+
+    const token = generateToken(admin._id);
+    logger.warn('⚠️  ADMIN_BYPASS aktiv — parolsiz kirish ishlatildi!');
+
+    return res.status(200).json({
+      success: true,
+      message: 'Bypass login muvaffaqiyatli',
+      data: {
+        admin: {
+          id: admin._id,
+          username: admin.username,
+          email: admin.email,
+          firstName: admin.firstName,
+          lastName: admin.lastName,
+          role: admin.role
+        },
+        token
+      }
+    });
+  }
+  // ── ODDIY LOGIN ──────────────────────────────────────────────────────────
+
   const { email, username, password } = req.body;
 
-  // Validate input
   if ((!email && !username) || !password) {
     return next(new AppError('Please provide email or username and password', 400));
   }

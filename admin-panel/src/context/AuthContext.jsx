@@ -3,21 +3,42 @@ import { authService } from '../services/authService'
 
 const AuthContext = createContext(null)
 
+// VITE_ADMIN_BYPASS=true bo'lsa parolsiz kirish
+const BYPASS = import.meta.env.VITE_ADMIN_BYPASS === 'true'
+
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const token = localStorage.getItem('token')
-    if (token) {
-      // Verify token and get user
-      authService.getProfile()
-        .then(response => setUser(response.data.admin))
-        .catch(() => localStorage.removeItem('token'))
-        .finally(() => setLoading(false))
-    } else {
-      setLoading(false)
+    const initAuth = async () => {
+      // Bypass rejimi — sahifa ochilishi bilanoq avtomatik login
+      if (BYPASS) {
+        try {
+          const response = await authService.login('', '')
+          setUser(response.data.admin)
+          localStorage.setItem('token', response.data.token)
+        } catch (err) {
+          console.error('Bypass login xatosi:', err)
+        } finally {
+          setLoading(false)
+        }
+        return
+      }
+
+      // Oddiy rejim — saqlangan token tekshiruvi
+      const token = localStorage.getItem('token')
+      if (token) {
+        authService.getProfile()
+          .then(response => setUser(response.data.admin))
+          .catch(() => localStorage.removeItem('token'))
+          .finally(() => setLoading(false))
+      } else {
+        setLoading(false)
+      }
     }
+
+    initAuth()
   }, [])
 
   const login = async (email, password) => {
