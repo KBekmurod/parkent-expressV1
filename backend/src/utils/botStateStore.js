@@ -75,6 +75,11 @@ const getPendingAddress = (chatId) => redis.get(`pending_addr:${chatId}`);
 const setPendingAddress = (chatId, loc) => redis.set(`pending_addr:${chatId}`, loc, TTL.REJECTION);
 const delPendingAddress = (chatId) => redis.del(`pending_addr:${chatId}`);
 
+// ─── Customer payment method ─────────────────────────────────────────
+const getPaymentMethod = (chatId) => redis.get(`payment_method:${chatId}`);
+const setPaymentMethod = (chatId, method) => redis.set(`payment_method:${chatId}`, method, 3600);
+const delPaymentMethod = (chatId) => redis.del(`payment_method:${chatId}`);
+
 // ─── Driver location tracking ────────────────────────────────────────
 const getDriverTracking = (driverId) => redis.get(`drv_track:${driverId}`);
 const setDriverTracking = (driverId, data) => redis.set(`drv_track:${driverId}`, data, 60 * 60);
@@ -85,5 +90,6 @@ module.exports = Object.assign(module.exports, {
   getProductCreate, setProductCreate, delProductCreate,
   getProductEdit, setProductEdit, delProductEdit,
   getPendingAddress, setPendingAddress, delPendingAddress,
+  getPaymentMethod, setPaymentMethod, delPaymentMethod,
   getDriverTracking, setDriverTracking, delDriverTracking
 });

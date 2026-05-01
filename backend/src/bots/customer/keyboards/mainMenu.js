@@ -1,6 +1,5 @@
-/**
- * Get main menu keyboard
- */
+const WEB_APP_URL = process.env.WEB_APP_URL || 'https://parkent-express.duckdns.org/web';
+
 const getMainMenuKeyboard = (language = 'uz') => {
   const keyboards = {
     uz: {
@@ -18,10 +17,14 @@ const getMainMenuKeyboard = (language = 'uz') => {
       resize_keyboard: true
     }
   };
-
   return keyboards[language] || keyboards.uz;
 };
 
-module.exports = {
-  getMainMenuKeyboard
-};
+// Web App inline tugmasi (alohida chiqarilganda ishlatiladi)
+const getWebAppButton = () => ({
+  inline_keyboard: [[
+    { text: '🌐 Ilovani ochish', web_app: { url: WEB_APP_URL } }
+  ]]
+});
+
+module.exports = { getMainMenuKeyboard, getWebAppButton };

@@ -42,8 +42,8 @@ const showProfile = async (bot, chatId, driverId) => {
  */
 const toggleOnlineStatus = async (bot, chatId, driverId, isOnline) => {
   try {
-    // Update driver status
-    await axios.put(`${API_URL}/drivers/${driverId}/status`, {
+    // Update driver online status
+    await axios.put(`${API_URL}/drivers/${driverId}/toggle-online`, {
       isOnline
     });
 

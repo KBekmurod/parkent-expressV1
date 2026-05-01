@@ -17,7 +17,7 @@ const showVendorList = async (bot, chatId, category = null) => {
 
     const keyboard = {
       inline_keyboard: vendors.map(vendor => [{
-        text: `${vendor.name} ⭐ ${vendor.rating.toFixed(1)}`,
+        text: `${vendor.name} ⭐ ${(vendor.rating || 0).toFixed(1)}`,
         callback_data: `vendor:${vendor._id}`
       }])
     };
@@ -50,7 +50,7 @@ const showVendorMenu = async (bot, chatId, vendorId) => {
     });
 
     let message = `🏪 *${vendor.name}*\n\n`;
-    message += `⭐ Reyting: ${vendor.rating.toFixed(1)}\n`;
+    message += `⭐ Reyting: ${(vendor.rating || 0).toFixed(1)}\n`;
     message += `📍 ${vendor.address}\n`;
     message += `🕒 ${vendor.workingHours.start} - ${vendor.workingHours.end}\n\n`;
     message += `📋 *Menyu:*`;

@@ -374,7 +374,7 @@ const updateOrderStatus = asyncHandler(async (req, res, next) => {
     pending:    ['accepted', 'rejected', 'cancelled'],
     accepted:   ['preparing', 'cancelled'],
     preparing:  ['ready', 'cancelled'],
-    ready:      ['assigned', 'cancelled'],
+    ready:      ['assigned', 'picked_up', 'cancelled'],
     assigned:   ['picked_up', 'cancelled'],
     picked_up:  ['on_the_way'],
     on_the_way: ['delivered'],

@@ -55,7 +55,7 @@ const createOrder = async (bot, chatId, userId, deliveryAddress, paymentMethod =
     }
 
     // Clear payment selection
-    paymentHandler.clearPaymentSelection(chatId);
+    await paymentHandler.clearPaymentSelection(chatId);
 
     const keyboard = {
       inline_keyboard: [

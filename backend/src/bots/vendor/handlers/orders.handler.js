@@ -75,8 +75,8 @@ const sendOrderDetails = async (bot, chatId, order, language = 'uz') => {
     
     // Customer info
     message += `👤 Mijoz: ${order.customer.firstName} ${order.customer.lastName || ''}\n`;
-    message += `📱 Telefon: ${order.customer.phone}\n`;
-    message += `📍 Manzil: ${order.deliveryAddress.address}\n\n`;
+    message += `📱 Telefon: ${(order?.customer?.phone || '—')}\n`;
+    message += `📍 Manzil: ${(order?.deliveryAddress?.address || '—')}\n\n`;
     
     // Order items
     message += `📋 *Mahsulotlar:*\n`;

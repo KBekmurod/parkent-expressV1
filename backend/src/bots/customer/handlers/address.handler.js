@@ -7,81 +7,99 @@ const paymentHandler = require('./payment.handler');
 
 const API_URL = process.env.API_URL || 'http://localhost:5000/api/v1';
 
-/**
- * Request delivery address
- */
 const requestAddress = async (bot, chatId) => {
   try {
     const telegramId = chatId.toString();
-    
-    // Get user addresses
     const response = await axios.get(`${API_URL}/users/telegram/${telegramId}`);
     const user = response.data.data.user;
 
     if (user.addresses && user.addresses.length > 0) {
-      // Show saved addresses
       const keyboard = {
         inline_keyboard: [
           ...user.addresses.map((addr, index) => [{
-            text: `📍 ${addr.title}`,
+            text: `📍 ${addr.title || addr.address}`,
             callback_data: `address:select:${index}`
           }]),
-          [
-            { text: '➕ Yangi manzil qo\'shish', callback_data: 'address:new' }
-          ]
+          [{ text: "➕ Yangi manzil qo'shish", callback_data: 'address:new' }]
         ]
       };
-
-      await bot.sendMessage(
-        chatId,
-        MESSAGES.uz.selectAddress,
-        { reply_markup: keyboard }
-      );
+      await bot.sendMessage(chatId, MESSAGES.uz.selectAddress, { reply_markup: keyboard });
     } else {
-      // Request new address
-      await bot.sendMessage(
-        chatId,
-        MESSAGES.uz.requestLocation,
-        {
-          reply_markup: {
-            keyboard: [
-              [{ text: '📍 Manzilni yuborish', request_location: true }]
-            ],
-            resize_keyboard: true,
-            one_time_keyboard: true
-          }
+      await bot.sendMessage(chatId, MESSAGES.uz.requestLocation, {
+        reply_markup: {
+          keyboard: [[{ text: '📍 Manzilni yuborish', request_location: true }]],
+          resize_keyboard: true,
+          one_time_keyboard: true
         }
-      );
+      });
     }
-
   } catch (error) {
     logger.error('Error requesting address:', error);
     await bot.sendMessage(chatId, MESSAGES.uz.error);
   }
 };
 
-/**
- * Handle location message
- */
+// Location keldi — koordinatalarni saqlap, manzil nomini so'raymiz
 const handleLocationMessage = async (bot, msg) => {
   const chatId = msg.chat.id;
   const { latitude, longitude } = msg.location;
 
-  // Request address title
-  await bot.sendMessage(chatId, MESSAGES.uz.requestAddressTitle);
-
-  // Store location temporarily (in production, use session storage)
-  // TODO: Replace with Redis-based session storage for production use to support:
-  // - Persistence across server restarts
-  // - Multi-process environments
-  // - Better scalability and reliability
-  
-  store.setPendingAddress(chatId, { lat: latitude, lng: longitude });
+  try {
+    await store.setPendingAddress(chatId, { lat: latitude, lng: longitude });
+    await bot.sendMessage(chatId, MESSAGES.uz.requestAddressTitle, {
+      reply_markup: {
+        keyboard: [['🏠 Uy', '🏢 Ish', '📍 Boshqa']],
+        resize_keyboard: true,
+        one_time_keyboard: true
+      }
+    });
+  } catch (error) {
+    logger.error('Error handling location:', error);
+    await bot.sendMessage(chatId, MESSAGES.uz.error);
+  }
 };
 
-/**
- * Handle address callback
- */
+// Manzil nomi keldi — buyurtmani yaratamiz
+const handleAddressTitle = async (bot, msg) => {
+  const chatId = msg.chat.id;
+  const title = msg.text;
+
+  try {
+    const pendingAddress = await store.getPendingAddress(chatId);
+    if (!pendingAddress) return false; // Bu handler uchun emas
+
+    const telegramId = chatId.toString();
+    const response = await axios.get(`${API_URL}/users/telegram/${telegramId}`);
+    const user = response.data.data.user;
+
+    // Manzilni saqlash
+    const deliveryAddress = {
+      title: title,
+      address: title,
+      location: pendingAddress
+    };
+
+    // Manzilni foydalanuvchiga saqlash
+    try {
+      await axios.post(`${API_URL}/users/${user._id}/addresses`, deliveryAddress);
+    } catch (e) {
+      // Manzil saqlanmasa ham davom etamiz
+    }
+
+    await store.delPendingAddress(chatId);
+
+    // To'lov metodini olib buyurtma yaratamiz
+    const paymentMethod = paymentHandler.getPaymentMethod(chatId);
+    await orderHandler.createOrder(bot, chatId, user._id, deliveryAddress, paymentMethod);
+
+    return true;
+  } catch (error) {
+    logger.error('Error handling address title:', error);
+    await bot.sendMessage(chatId, MESSAGES.uz.error);
+    return true;
+  }
+};
+
 const handleAddressCallback = async (bot, callbackQuery) => {
   const chatId = callbackQuery.message.chat.id;
   const data = callbackQuery.data.split(':');
@@ -91,36 +109,31 @@ const handleAddressCallback = async (bot, callbackQuery) => {
 
   if (action === 'select') {
     const addressIndex = parseInt(data[2]);
-    
-    // Get user
-    const telegramId = chatId.toString();
-    const response = await axios.get(`${API_URL}/users/telegram/${telegramId}`);
-    const user = response.data.data.user;
-    const address = user.addresses[addressIndex];
-
-    // Proceed to order creation with selected payment method
-    const paymentMethod = paymentHandler.getPaymentMethod(chatId);
-    await orderHandler.createOrder(bot, chatId, user._id, address, paymentMethod);
-    
+    try {
+      const telegramId = chatId.toString();
+      const response = await axios.get(`${API_URL}/users/telegram/${telegramId}`);
+      const user = response.data.data.user;
+      const address = user.addresses[addressIndex];
+      const paymentMethod = paymentHandler.getPaymentMethod(chatId);
+      await orderHandler.createOrder(bot, chatId, user._id, address, paymentMethod);
+    } catch (error) {
+      logger.error('Error selecting address:', error);
+      await bot.sendMessage(chatId, MESSAGES.uz.error);
+    }
   } else if (action === 'new') {
-    await bot.sendMessage(
-      chatId,
-      MESSAGES.uz.requestLocation,
-      {
-        reply_markup: {
-          keyboard: [
-            [{ text: '📍 Manzilni yuborish', request_location: true }]
-          ],
-          resize_keyboard: true,
-          one_time_keyboard: true
-        }
+    await bot.sendMessage(chatId, MESSAGES.uz.requestLocation, {
+      reply_markup: {
+        keyboard: [[{ text: '📍 Manzilni yuborish', request_location: true }]],
+        resize_keyboard: true,
+        one_time_keyboard: true
       }
-    );
+    });
   }
 };
 
 module.exports = {
   requestAddress,
   handleLocationMessage,
+  handleAddressTitle,
   handleAddressCallback
 };

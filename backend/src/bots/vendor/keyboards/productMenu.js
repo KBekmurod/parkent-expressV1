@@ -30,13 +30,12 @@ const getProductActionKeyboard = (productId, isAvailable, language = 'uz') => {
     uz: {
       inline_keyboard: [
         [
-          { text: '✏️ Tahrirlash', callback_data: `product:edit:${productId}` },
-          { 
-            text: isAvailable ? '❌ Nofaol qilish' : '✅ Faol qilish', 
-            callback_data: `product:toggle:${productId}` 
-          }
+          { text: isAvailable ? '❌ Nofaol qilish' : '✅ Faol qilish', callback_data: `product:toggle:${productId}` }
         ],
-        [{ text: '🔙 Orqaga', callback_data: 'product:list' }]
+        [
+          { text: "🗑️ O'chirish", callback_data: `product:delete:${productId}` },
+          { text: '🔙 Orqaga', callback_data: 'product:list' }
+        ]
       ]
     },
     ru: {

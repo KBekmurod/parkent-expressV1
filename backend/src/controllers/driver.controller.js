@@ -302,5 +302,85 @@ module.exports = {
   toggleOnline,
   uploadDocument,
   updateDriverStatus,
-  getAvailableDrivers
+  getAvailableDrivers,
+  getDriverEarnings,
+  getDriverStats
 };
+
+/**
+ * @desc    Driver daromadini olish (bot uchun)
+ * @route   GET /api/v1/drivers/:id/earnings
+ * @access  Public (bot)
+ */
+const getDriverEarnings = asyncHandler(async (req, res, next) => {
+  const Order = require('../models/Order.model');
+  const driverId = req.params.id;
+
+  const now = new Date();
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const weekStart = new Date(now);
+  weekStart.setDate(now.getDate() - 7);
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+
+  const [daily, weekly, monthly, total] = await Promise.all([
+    Order.aggregate([
+      { $match: { driver: require('mongoose').Types.ObjectId.createFromHexString(driverId), status: 'delivered', createdAt: { $gte: todayStart } } },
+      { $group: { _id: null, amount: { $sum: '$deliveryFee' }, count: { $sum: 1 } } }
+    ]),
+    Order.aggregate([
+      { $match: { driver: require('mongoose').Types.ObjectId.createFromHexString(driverId), status: 'delivered', createdAt: { $gte: weekStart } } },
+      { $group: { _id: null, amount: { $sum: '$deliveryFee' }, count: { $sum: 1 } } }
+    ]),
+    Order.aggregate([
+      { $match: { driver: require('mongoose').Types.ObjectId.createFromHexString(driverId), status: 'delivered', createdAt: { $gte: monthStart } } },
+      { $group: { _id: null, amount: { $sum: '$deliveryFee' }, count: { $sum: 1 } } }
+    ]),
+    Order.aggregate([
+      { $match: { driver: require('mongoose').Types.ObjectId.createFromHexString(driverId), status: 'delivered' } },
+      { $group: { _id: null, amount: { $sum: '$deliveryFee' }, count: { $sum: 1 } } }
+    ]),
+  ]);
+
+  res.json({
+    success: true,
+    data: {
+      daily: daily[0] || { amount: 0, count: 0 },
+      weekly: weekly[0] || { amount: 0, count: 0 },
+      monthly: monthly[0] || { amount: 0, count: 0 },
+      total: total[0] || { amount: 0, count: 0 },
+    }
+  });
+});
+
+/**
+ * @desc    Driver statistikasini olish (bot uchun)
+ * @route   GET /api/v1/drivers/:id/stats
+ * @access  Public (bot)
+ */
+const getDriverStats = asyncHandler(async (req, res, next) => {
+  const Order = require('../models/Order.model');
+  const driverId = req.params.id;
+  const mongoose = require('mongoose');
+  const id = mongoose.Types.ObjectId.createFromHexString(driverId);
+
+  const [completed, cancelled, total] = await Promise.all([
+    Order.countDocuments({ driver: id, status: 'delivered' }),
+    Order.countDocuments({ driver: id, status: 'cancelled' }),
+    Order.countDocuments({ driver: id }),
+  ]);
+
+  const totalCount = completed + cancelled;
+  const completionRate = totalCount > 0 ? Math.round((completed / totalCount) * 100) : 0;
+
+  res.json({
+    success: true,
+    data: {
+      completedOrders: completed,
+      cancelledOrders: cancelled,
+      completionRate,
+      averageRating: 0,
+      totalReviews: 0,
+      totalEarnings: 0,
+    }
+  });
+});

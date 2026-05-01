@@ -69,7 +69,7 @@ const showStats = async (bot, chatId, vendorId) => {
       
       // Overall stats
       message += '\n\n📊 *Umumiy*\n';
-      message += `⭐ Reyting: ${vendor.rating.toFixed(1)}/5.0\n`;
+      message += `⭐ Reyting: ${(vendor.rating || 0).toFixed(1)}/5.0\n`;
       message += `📦 Jami buyurtmalar: ${vendor.totalOrders}\n`;
       message += `💰 Balans: ${formatPrice(vendor.balance)}`;
     } else {
