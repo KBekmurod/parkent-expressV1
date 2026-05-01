@@ -1,85 +1,69 @@
 const TelegramBot = require('node-telegram-bot-api');
 const logger = require('../../utils/logger');
-const store = require('../../utils/botStateStore');
 
-const startHandler = require('./handlers/start.handler');
-const menuHandler = require('./handlers/menu.handler');
-const vendorHandler = require('./handlers/vendor.handler');
-const cartHandler = require('./handlers/cart.handler');
-const orderHandler = require('./handlers/order.handler');
-const addressHandler = require('./handlers/address.handler');
-const profileHandler = require('./handlers/profile.handler');
-const paymentHandler = require('./handlers/payment.handler');
-const confirmationHandler = require('./handlers/confirmation.handler');
+const WEB_APP_URL = process.env.WEB_APP_URL || 'https://parkent-express.duckdns.org/web';
 
 let customerBot;
 
 const initCustomerBot = () => {
   const token = process.env.CUSTOMER_BOT_TOKEN;
   if (!token) {
-    logger.warn('⚠️ Customer Bot token topilmadi. Bot o\'chirildi.');
+    logger.warn('⚠️ Customer Bot token topilmadi.');
     return null;
   }
 
   try {
     customerBot = new TelegramBot(token, { polling: true });
 
-    customerBot.onText(/\/start/, startHandler.handleStart(customerBot));
+    // Faqat /start komandasi — web ilova tugmasi
+    customerBot.onText(/\/start/, async (msg) => {
+      const chatId = msg.chat.id;
+      const firstName = msg.from.first_name || 'Mehmon';
 
-    customerBot.on('callback_query', (callbackQuery) => {
-      const data = callbackQuery.data;
-      if (data.startsWith('menu:')) {
-        menuHandler.handleMenuCallback(customerBot, callbackQuery);
-      } else if (data.startsWith('vendor:')) {
-        vendorHandler.handleVendorCallback(customerBot, callbackQuery);
-      } else if (data.startsWith('product:')) {
-        vendorHandler.handleProductCallback(customerBot, callbackQuery);
-      } else if (data.startsWith('cart:')) {
-        cartHandler.handleCartCallback(customerBot, callbackQuery);
-      } else if (data.startsWith('order:')) {
-        orderHandler.handleOrderCallback(customerBot, callbackQuery);
-      } else if (data.startsWith('address:')) {
-        addressHandler.handleAddressCallback(customerBot, callbackQuery);
-      } else if (data.startsWith('profile:')) {
-        profileHandler.handleProfileCallback(customerBot, callbackQuery);
-      } else if (data.startsWith('payment:')) {
-        paymentHandler.handlePaymentMethodCallback(customerBot, callbackQuery);
-      } else if (data.startsWith('confirm:')) {
-        confirmationHandler.handleConfirmationCallback(customerBot, callbackQuery);
-      }
+      const welcomeText =
+        `👋 Salom, ${firstName}!\n\n` +
+        `🍕 *Parkent Express* — tez va qulay ovqat yetkazib berish xizmati.\n\n` +
+        `Buyurtma berish uchun ilovamizni oching 👇`;
+
+      await customerBot.sendMessage(chatId, welcomeText, {
+        parse_mode: 'Markdown',
+        reply_markup: {
+          inline_keyboard: [[
+            {
+              text: '🚀 Ilovani ochish',
+              web_app: { url: WEB_APP_URL }
+            }
+          ]]
+        }
+      });
     });
 
+    // Boshqa barcha xabarlar uchun — faqat ilova tugmasini ko'rsatish
     customerBot.on('message', async (msg) => {
-      if (msg.contact) {
-        startHandler.handleContact(customerBot)(msg);
-        return;
-      }
+      if (msg.text?.startsWith('/start')) return; // Already handled
 
-      if (msg.location) {
-        addressHandler.handleLocationMessage(customerBot, msg);
-        return;
-      }
+      const chatId = msg.chat.id;
 
-      if (msg.text && !msg.text.startsWith('/')) {
-        const chatId = msg.chat.id;
-
-        // 1. Manzil nomi kutilayotganmi?
-        const pendingAddress = await store.getPendingAddress(chatId);
-        if (pendingAddress) {
-          const handled = await addressHandler.handleAddressTitle(customerBot, msg);
-          if (handled) return;
-        }
-
-        // 2. Asosiy menyu komandalar
-        menuHandler.handleTextMessage(customerBot, msg);
+      // /start bo'lmagan barcha xabarlar uchun ilova tugmasi
+      if (!msg.text?.startsWith('/')) {
+        await customerBot.sendMessage(chatId,
+          '📱 Buyurtma berish uchun ilovamizdan foydalaning:',
+          {
+            reply_markup: {
+              inline_keyboard: [[
+                { text: '🚀 Ilovani ochish', web_app: { url: WEB_APP_URL } }
+              ]]
+            }
+          }
+        );
       }
     });
 
     customerBot.on('polling_error', (error) => {
-      logger.error('Customer Bot polling error:', error);
+      logger.error('Customer Bot polling error:', error.message);
     });
 
-    logger.info('✅ Customer Bot initialized');
+    logger.info('✅ Customer Bot initialized (web-only mode)');
     return customerBot;
   } catch (error) {
     logger.error('❌ Customer Bot initialization failed:', error);

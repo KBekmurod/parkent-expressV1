@@ -1,13 +1,14 @@
 {
   "name": "Parkent Express",
   "short_name": "Parkent",
-  "description": "Tez va qulay ovqat yetkazib berish",
+  "description": "Tez va qulay ovqat yetkazib berish xizmati",
   "start_url": "/web/home",
   "scope": "/web/",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#F97316",
   "orientation": "portrait",
+  "background_color": "#FF6B35",
+  "theme_color": "#FF6B35",
+  "lang": "uz",
   "icons": [
     {
       "src": "/web/icons/icon-192.png",
@@ -22,6 +23,6 @@
       "purpose": "any maskable"
     }
   ],
-  "categories": ["food", "shopping"],
-  "lang": "uz"
+  "screenshots": [],
+  "categories": ["food", "shopping"]
 }

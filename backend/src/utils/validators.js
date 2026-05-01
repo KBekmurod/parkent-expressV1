@@ -133,12 +133,14 @@ const orderSchemas = {
     ).min(1).required(),
     deliveryAddress: Joi.object({
       location: Joi.object({
-        lat: Joi.number().required(),
-        lng: Joi.number().required()
-      }).optional(),  // Web'dan kelgan vaqtda location bo'lmasligi mumkin
-      address: Joi.string().trim().required()
+        lat: Joi.number(),
+        lng: Joi.number()
+      }).optional(),
+      address: Joi.string().trim().required(),
+      title: Joi.string().optional()
     }).required(),
-    paymentMethod: Joi.string().valid('cash', 'card', 'card_to_driver').required(),
+    paymentMethod: Joi.string().valid('cash', 'card', 'card_to_driver', 'payme', 'click').required(),
+    deliveryFee: Joi.number().min(0).optional(),
     customerNote: Joi.string().trim().allow(''),
     totalAmount: Joi.number().optional(),  // Frontend kompatibilligi uchun (server qayta hisoblaydi)
     source: Joi.string().valid('telegram', 'web').optional()

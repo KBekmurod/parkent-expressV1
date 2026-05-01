@@ -2,6 +2,7 @@ import './globals.css';
 import { AuthProvider } from '../context/AuthContext';
 import { CartProvider } from '../context/CartContext';
 import Toast from '../components/ui/Toast';
+import InstallBanner from '../components/ui/InstallBanner';
 
 export const metadata = {
   title: 'Parkent Express',
@@ -23,7 +24,7 @@ export const viewport = {
   width: 'device-width',
   initialScale: 1,
   maximumScale: 1,
-  themeColor: '#F97316',
+  themeColor: '#FF6B35',
 };
 
 export default function RootLayout({ children }) {
@@ -41,14 +42,13 @@ export default function RootLayout({ children }) {
           <CartProvider>
             {children}
             <Toast />
+            <InstallBanner />
           </CartProvider>
         </AuthProvider>
-        {/* Service Worker ro'yxatdan o'tkazish */}
         <script dangerouslySetInnerHTML={{__html: `
           if ('serviceWorker' in navigator) {
             window.addEventListener('load', function() {
               navigator.serviceWorker.register('/web/sw.js', { scope: '/web/' })
-                .then(function(reg) { console.log('SW registered:', reg.scope); })
                 .catch(function(err) { console.log('SW error:', err); });
             });
           }

@@ -9,6 +9,7 @@ import Button from '../../../components/ui/Button';
 import { useCartContext } from '../../../context/CartContext';
 import { useAuthContext } from '../../../context/AuthContext';
 import { createOrder } from '../../../services/orderService';
+import { ADMIN_TELEGRAM } from '../../../utils/constants';
 import toast from 'react-hot-toast';
 
 export default function CheckoutPage() {
@@ -19,30 +20,35 @@ export default function CheckoutPage() {
   const [paymentMethod, setPaymentMethod] = useState('cash');
   const [loading, setLoading] = useState(false);
 
+  const deliveryFee = selectedAddress?.deliveryFee || 0;
+  const grandTotal = total + deliveryFee;
+
   const handleOrder = async () => {
     if (!selectedAddress) {
-      toast.error("Iltimos, yetkazib berish manzilini tanlang");
+      toast.error('Iltimos, yetkazib berish manzilini tanlang');
       return;
     }
     if (cart.length === 0) {
       toast.error("Savatcha bo'sh");
       return;
     }
-
-    // Validate all cart items are from the same vendor
-    const vendorIds = [...new Set(cart.map((item) => item.vendorId))];
-    if (vendorIds.length > 1) {
-      toast.error("Savatchangizda turli restoranlardan mahsulotlar bor. Iltimos, bitta restorandan buyurtma bering");
+    if (!user?.id) {
+      toast.error('Iltimos, avval tizimga kiring');
+      router.push('/login');
       return;
     }
 
-    const vendorId = vendorIds[0];
+    const vendorIds = [...new Set(cart.map((item) => item.vendorId).filter(Boolean))];
+    if (vendorIds.length > 1) {
+      toast.error('Bitta restorandan buyurtma bering');
+      return;
+    }
 
     setLoading(true);
     try {
       const orderData = {
         customer: user.id,
-        vendor: vendorId,
+        vendor: vendorIds[0] || cart[0]?.vendorId,
         items: cart.map((item) => ({
           product: item.productId,
           name: item.name,
@@ -51,20 +57,41 @@ export default function CheckoutPage() {
         })),
         deliveryAddress: {
           address: selectedAddress.address,
-          ...(selectedAddress.location && { location: selectedAddress.location }),
+          title: selectedAddress.title || 'Manzil',
+          location: selectedAddress.location || { lat: 41.2995, lng: 69.2401 },
         },
         paymentMethod,
-        totalAmount: total,
+        deliveryFee,
+        totalAmount: grandTotal,
         source: 'web',
       };
 
       const response = await createOrder(orderData);
-      const orderId = response.data?.order?._id;
+      const orderId = response?.data?.order?._id || response?.order?._id;
+
       clearCart();
-      toast.success("Buyurtma muvaffaqiyatli berildi!");
+      toast.success('Buyurtma muvaffaqiyatli berildi!');
+
+      // Karta to'lov - Telegram deep link
+      if (paymentMethod === 'card_to_driver' && orderId) {
+        const itemsList = cart.map(i => `${i.name} x${i.quantity}`).join(', ');
+        const text = encodeURIComponent(
+          `Salom! Buyurtma #${orderId} uchun karta orqali to'lov qilmoqchiman.\n` +
+          `Mahsulotlar: ${itemsList}\n` +
+          `Jami: ${new Intl.NumberFormat('uz-UZ').format(grandTotal)} so'm`
+        );
+        const telegramUrl = `https://t.me/${ADMIN_TELEGRAM}?text=${text}`;
+
+        // 1 soniya kutib Telegram'ni ochish
+        setTimeout(() => {
+          window.open(telegramUrl, '_blank');
+        }, 1000);
+      }
+
       router.push(orderId ? `/orders/${orderId}` : '/orders');
     } catch (err) {
-      toast.error(err.response?.data?.message || "Buyurtma berishda xatolik");
+      const msg = err?.response?.data?.message || err?.message || 'Buyurtma berishda xatolik';
+      toast.error(msg);
     } finally {
       setLoading(false);
     }
@@ -75,19 +102,44 @@ export default function CheckoutPage() {
       <h1 className="text-2xl font-bold text-gray-900 mb-5">Buyurtma berish</h1>
 
       <div className="space-y-4">
+        {/* Manzil */}
         <div className="bg-white rounded-2xl border border-gray-100 p-4">
           <AddressSelector onSelect={setSelectedAddress} selected={selectedAddress} />
         </div>
 
+        {/* To'lov */}
         <div className="bg-white rounded-2xl border border-gray-100 p-4">
           <PaymentSelector selected={paymentMethod} onSelect={setPaymentMethod} />
         </div>
 
-        <CartSummary total={total} itemCount={count} />
+        {/* Xulosa */}
+        <CartSummary total={total} deliveryFee={deliveryFee} itemCount={count} />
 
-        <Button onClick={handleOrder} variant="primary" fullWidth size="lg" loading={loading} disabled={!selectedAddress}>
-          Buyurtma berish
+        {/* Qaytim so'rash - naqd pul uchun */}
+        {paymentMethod === 'cash' && (
+          <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-3 text-xs text-yellow-700">
+            💡 Kuryer chegirma qaytim bera olmasligi mumkin. Iltimos, aniq pul tayyorlab qo'ying.
+          </div>
+        )}
+
+        <Button
+          onClick={handleOrder}
+          variant="primary"
+          fullWidth
+          size="lg"
+          loading={loading}
+          disabled={!selectedAddress || loading}
+        >
+          {paymentMethod === 'card_to_driver'
+            ? `Buyurtma berish (${new Intl.NumberFormat('uz-UZ').format(grandTotal)} so'm)`
+            : `Buyurtma berish`}
         </Button>
+
+        {!selectedAddress && (
+          <p className="text-center text-xs text-gray-400">
+            Manzilni tanlang yoki joylashuvingizni aniqlang
+          </p>
+        )}
       </div>
     </PageWrapper>
   );
