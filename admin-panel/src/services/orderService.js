@@ -13,7 +13,12 @@ export const orderService = {
     return await api.put(`/orders/${id}/status`, { status })
   },
 
-  assignDriver: async (id, driverId) => {
-    return await api.put(`/orders/${id}/assign-driver`, { driver: driverId })
+  // driverId - MongoDB ObjectId
+  assignDriver: async (orderId, driverId) => {
+    return await api.put(`/orders/${orderId}/assign-driver`, { driverId })
+  },
+
+  cancelOrder: async (id) => {
+    return await api.put(`/orders/${id}/cancel`)
   },
 }

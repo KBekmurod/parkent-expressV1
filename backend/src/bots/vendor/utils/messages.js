@@ -28,6 +28,10 @@ const MESSAGES = {
     
     registrationPending: `⏳ Sizning arizangiz hali ko'rib chiqilmoqda.\n\nIltimos, admin javobini kuting.`,
     
+    registrationApproved: `🎉 *Tabriklaymiz! Arizangiz tasdiqlandi!*\n\n✅ Restoran endi faol. Menyuni sozlab, buyurtmalarni qabul qila boshlashingiz mumkin.\n\n/start bosing.`,
+    
+    registrationRejected: (reason) => `❌ *Arizangiz rad etildi.*\n\nSabab: ${reason}\n\nQo'shimcha ma'lumot uchun admin bilan bog'laning.`,
+    
     accountBlocked: `🚫 Sizning hisobingiz bloklangan.\n\nQo'shimcha ma'lumot uchun admin bilan bog'laning.`,
     
     accountClosed: `🔒 Sizning hisobingiz yopilgan.`,

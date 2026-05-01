@@ -76,7 +76,9 @@ const userSchema = new mongoose.Schema({
 });
 
 // Indekslar
+userSchema.index({ phone: 1 });
 userSchema.index({ status: 1 });
+userSchema.index({ webPhone: 1 });
 userSchema.index({ authType: 1 });
 
 module.exports = mongoose.model('User', userSchema);

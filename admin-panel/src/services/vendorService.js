@@ -21,6 +21,11 @@ export const vendorService = {
     return await api.put(`/vendors/${id}/status`, { status })
   },
 
+  // Tasdiqlash yoki rad etish (vendor'ga Telegram xabar boradi)
+  approveVendor: async (id, approved, reason = '') => {
+    return await api.put(`/admin/vendors/${id}/approve`, { approved, reason })
+  },
+
   deleteVendor: async (id) => {
     return await api.delete(`/vendors/${id}`)
   },

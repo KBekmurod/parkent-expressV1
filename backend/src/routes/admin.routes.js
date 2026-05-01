@@ -161,6 +161,19 @@ router.put('/vendors/:id/approve', asyncHandler(async (req, res, next) => {
 
   if (!vendor) return next(new AppError('Sotuvchi topilmadi', 404));
   logger.info(`Sotuvchi ${approved ? 'tasdiqlandi' : 'rad etildi'}: ${vendor.name}`);
+
+  // Vendor'ga Telegram xabar yuborish
+  try {
+    const { getVendorBot } = require('../bots/vendor');
+    const vendorBot = getVendorBot();
+    if (vendorBot && vendor.telegramId) {
+      const { notifyApproval } = require('../bots/vendor/handlers/start.handler');
+      await notifyApproval(vendorBot, vendor.telegramId, approved, req.body.reason);
+    }
+  } catch (err) {
+    logger.warn('Vendor bot bildirishnomasi yuborilmadi:', err.message);
+  }
+
   res.json({ success: true, data: { vendor } });
 }));
 

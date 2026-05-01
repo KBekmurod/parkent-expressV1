@@ -13,8 +13,14 @@ export const driverService = {
     return await api.put(`/drivers/${id}`, data)
   },
 
+  // Status o'zgartirish (dropdown orqali)
   updateDriverStatus: async (id, status) => {
     return await api.put(`/drivers/${id}/status`, { status })
+  },
+
+  // Tasdiqlash yoki rad etish (admin qaroriga asoslangan)
+  approveDriver: async (id, approved, reason = '') => {
+    return await api.put(`/admin/drivers/${id}/approve`, { approved, reason })
   },
 
   deleteDriver: async (id) => {

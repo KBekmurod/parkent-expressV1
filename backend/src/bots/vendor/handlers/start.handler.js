@@ -308,5 +308,17 @@ module.exports = {
   handleStart,
   handleContact,
   handleLocationMessage,
-  handleTextMessage
+  handleTextMessage,
+  notifyApproval: async (bot, telegramId, approved, reason = null) => {
+    try {
+      const { MESSAGES } = require('../utils/messages');
+      const message = approved
+        ? MESSAGES.uz.registrationApproved
+        : MESSAGES.uz.registrationRejected(reason || 'Sabab ko\'rsatilmadi');
+      await bot.sendMessage(telegramId, message, { parse_mode: 'Markdown' });
+    } catch (err) {
+      const logger = require('../../../utils/logger');
+      logger.warn(`Vendor approve notify xatosi: ${err.message}`);
+    }
+  }
 };
