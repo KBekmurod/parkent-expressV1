@@ -9,7 +9,8 @@ const {
   addAddress,
   updateAddress,
   deleteAddress,
-  updateUserStatus
+  updateUserStatus,
+  deleteUser
 } = require('../controllers/user.controller');
 const { protect, adminAuth } = require('../middleware/auth.middleware');
 const { validate, validateObjectId } = require('../middleware/validation.middleware');
@@ -18,7 +19,7 @@ const { userSchemas } = require('../utils/validators');
 // Public routes (Telegram bot)
 router.post('/register', validate(userSchemas.register), registerUser);
 router.get('/telegram/:telegramId', getUserByTelegramId);
-router.put('/telegram/:telegramId', updateUserByTelegramId); // For phone update
+router.put('/telegram/:telegramId', updateUserByTelegramId);
 router.post('/:id/addresses', validateObjectId('id'), validate(userSchemas.addAddress), addAddress);
 router.put('/:id/addresses/:addressIndex', validateObjectId('id'), validate(userSchemas.addAddress), updateAddress);
 router.delete('/:id/addresses/:addressIndex', validateObjectId('id'), deleteAddress);
@@ -27,5 +28,6 @@ router.delete('/:id/addresses/:addressIndex', validateObjectId('id'), deleteAddr
 router.get('/', protect, adminAuth, getAllUsers);
 router.get('/:id', protect, adminAuth, validateObjectId('id'), getUserById);
 router.put('/:id/status', protect, adminAuth, validateObjectId('id'), updateUserStatus);
+router.delete('/:id', protect, adminAuth, validateObjectId('id'), deleteUser);
 
 module.exports = router;

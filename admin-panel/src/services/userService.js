@@ -13,6 +13,14 @@ export const userService = {
     return await api.put(`/users/${id}`, data)
   },
 
+  blockUser: async (id) => {
+    return await api.put(`/users/${id}/status`, { status: 'blocked' })
+  },
+
+  unblockUser: async (id) => {
+    return await api.put(`/users/${id}/status`, { status: 'active' })
+  },
+
   deleteUser: async (id) => {
     return await api.delete(`/users/${id}`)
   },

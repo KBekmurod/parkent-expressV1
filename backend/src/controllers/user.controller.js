@@ -292,5 +292,13 @@ module.exports = {
   addAddress,
   updateAddress,
   deleteAddress,
-  updateUserStatus
+  updateUserStatus,
+  deleteUser
 };
+
+const deleteUser = asyncHandler(async (req, res, next) => {
+  const user = await User.findByIdAndDelete(req.params.id);
+  if (!user) return next(new AppError('User topilmadi', 404));
+  logger.info(`User deleted: ${req.params.id}`);
+  res.status(200).json({ success: true, message: "Foydalanuvchi o'chirildi" });
+});

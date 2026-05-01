@@ -60,14 +60,18 @@ const createOrderWithRetry = async (orderData, maxRetries = 3) => {
 const createOrder = asyncHandler(async (req, res, next) => {
   const { customer, vendor, items, deliveryAddress, paymentMethod, customerNote } = req.body;
 
+  // customer ID normalize (string yoki object bo'lishi mumkin)
+  const customerId = customer?.$oid || customer?.toString?.() || customer;
+  const vendorId = vendor?.$oid || vendor?.toString?.() || vendor;
+
   // Validate customer
-  const customerExists = await User.findById(customer);
+  const customerExists = await User.findById(customerId);
   if (!customerExists) {
     return next(new AppError('Customer not found', 404));
   }
 
   // Validate vendor
-  const vendorExists = await Vendor.findById(vendor);
+  const vendorExists = await Vendor.findById(vendorId);
   if (!vendorExists) {
     return next(new AppError('Vendor not found', 404));
   }
@@ -168,8 +172,8 @@ const createOrder = asyncHandler(async (req, res, next) => {
 
   // Create order with retry logic to handle order number collisions
   const order = await createOrderWithRetry({
-    customer,
-    vendor,
+    customer: customerId,
+    vendor: vendorId,
     items: orderItems,
     subtotal,
     deliveryFee,
@@ -203,7 +207,7 @@ const createOrder = asyncHandler(async (req, res, next) => {
   const io = req.app.get('io');
   if (io) {
     io.to(`vendor:${vendor}`).emit('order:new', { order });
-    io.to(`customer:${customer}`).emit('order:created', { order });
+    io.to(`customer:${customerId}`).emit('order:created', { order });
   }
 
   res.status(201).json({
