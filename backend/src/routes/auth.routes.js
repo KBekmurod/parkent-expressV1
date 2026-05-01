@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { register, login, getMe, updatePassword, webLogin, webRegister } = require('../controllers/auth.controller');
+const { register, login, getMe, updatePassword, updateProfile, webLogin, webRegister } = require('../controllers/auth.controller');
 const { protect, adminAuth, authorize } = require('../middleware/auth.middleware');
 const { validate } = require('../middleware/validation.middleware');
 const { adminSchemas } = require('../utils/validators');
@@ -21,6 +21,7 @@ router.post('/register', protect, adminAuth, authorize('super_admin'), validate(
 router.post('/login', authLimiter, loginHandler);
 router.post('/admin/login', authLimiter, loginHandler);
 router.get('/me', protect, adminAuth, getMe);
+router.put('/profile', protect, adminAuth, updateProfile);
 router.put('/password', protect, adminAuth, updatePassword);
 
 router.post('/web/register', authLimiter, webRegister);

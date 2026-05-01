@@ -5,14 +5,14 @@ const adminSchema = new mongoose.Schema({
   username: {
     type: String,
     required: true,
-    unique: true, // Creates index automatically
+    unique: true,
     trim: true,
     lowercase: true
   },
   email: {
     type: String,
     required: true,
-    unique: true, // Creates index automatically
+    unique: true,
     trim: true,
     lowercase: true,
     match: /^\S+@\S+\.\S+$/
@@ -42,6 +42,21 @@ const adminSchema = new mongoose.Schema({
   },
   lastLogin: {
     type: Date
+  },
+  // Admin o'z Telegram ID'sini settings'da qo'shadi
+  // Shunda yangi vendor/driver/buyurtma haqida Telegram'da xabar oladi
+  telegramId: {
+    type: String,
+    trim: true,
+    sparse: true,
+    default: null
+  },
+  // Qaysi bildirishnomalarni olish
+  notifications: {
+    newVendor: { type: Boolean, default: true },
+    newDriver: { type: Boolean, default: true },
+    newOrder: { type: Boolean, default: false }, // Ko'p buyurtma bo'lganda spam qilmasin
+    systemAlerts: { type: Boolean, default: true }
   }
 }, {
   timestamps: true

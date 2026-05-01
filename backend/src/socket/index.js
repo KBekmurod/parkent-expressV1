@@ -33,6 +33,13 @@ const initSocket = (server) => {
       const userRoom = `${socket.user.type}:${socket.user.id}`;
       socket.join(userRoom);
       logger.info(`User joined room: ${userRoom}`);
+
+      // Admin uchun umumiy 'admin' room'ga ham qo'shish
+      // Bu barcha adminlarga bir vaqtda xabar yuborish imkonini beradi
+      if (socket.user.type === 'admin') {
+        socket.join('admin');
+        logger.info(`Admin joined 'admin' room: ${socket.user.id}`);
+      }
     }
 
     // Register event handlers

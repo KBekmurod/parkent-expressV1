@@ -220,6 +220,40 @@ const updatePassword = asyncHandler(async (req, res, next) => {
 });
 
 /**
+ * @desc    Admin profil ma'lumotlarini yangilash (Telegram ID ham)
+ * @route   PUT /api/v1/auth/profile
+ * @access  Private (Admin)
+ */
+const updateProfile = asyncHandler(async (req, res, next) => {
+  const { firstName, lastName, telegramId, notifications } = req.body;
+
+  const admin = await Admin.findById(req.user.id);
+  if (!admin) return next(new AppError('Admin topilmadi', 404));
+
+  if (firstName) admin.firstName = firstName.trim();
+  if (lastName !== undefined) admin.lastName = lastName.trim();
+
+  // telegramId — raqam yoki bo'sh satr
+  if (telegramId !== undefined) {
+    admin.telegramId = telegramId ? telegramId.toString().trim() : null;
+  }
+
+  // Notification sozlamalari
+  if (notifications && typeof notifications === 'object') {
+    admin.notifications = { ...admin.notifications.toObject?.() || admin.notifications, ...notifications };
+  }
+
+  await admin.save();
+  logger.info(`Admin profil yangilandi: ${admin.username}`);
+
+  res.status(200).json({
+    success: true,
+    message: 'Profil muvaffaqiyatli yangilandi',
+    data: { admin }
+  });
+});
+
+/**
  * @desc    Web mijozni ro'yxatdan o'tkazish
  * @route   POST /api/v1/auth/web/register
  * @access  Public
@@ -334,6 +368,7 @@ module.exports = {
   login,
   getMe,
   updatePassword,
+  updateProfile,
   webRegister,
   webLogin
 };

@@ -167,6 +167,41 @@ router.put('/vendors/:id/approve', asyncHandler(async (req, res, next) => {
 // ─── Dashboard statistika ───────────────────────────────────────────────────
 
 /**
+ * POST /api/v1/admin/test-notification — admin o'z Telegram ID'sini test qilish
+ */
+router.post('/test-notification', asyncHandler(async (req, res) => {
+  const admin = await Admin.findById(req.user.id).select('telegramId firstName');
+
+  if (!admin?.telegramId) {
+    return res.status(400).json({
+      success: false,
+      message: "Telegram ID topilmadi. Avval Settings'da Telegram ID kiriting."
+    });
+  }
+
+  const { notifyAdmins } = require('../services/notification.service');
+
+  // Faqat shu adminga test xabar
+  const Admin2 = require('../models/Admin.model');
+  const tempAdmin = await Admin2.findById(req.user.id);
+  if (tempAdmin) {
+    // notifications.systemAlerts ni vaqtincha true qilib test yuborish
+    const origSysAlerts = tempAdmin.notifications?.systemAlerts;
+    if (!origSysAlerts) {
+      tempAdmin.notifications = { ...tempAdmin.notifications?.toObject?.() || {}, systemAlerts: true };
+      await tempAdmin.save();
+    }
+  }
+
+  await notifyAdmins(
+    `✅ *Test xabar!*\n\nSizning Telegram bildirishnomalaringiz to'g'ri sozlangan.\n\n🎉 Parkent Express Admin Panel`,
+    'systemAlerts'
+  );
+
+  res.json({ success: true, message: 'Test xabar yuborildi' });
+}));
+
+/**
  * GET /api/v1/admin/dashboard — asosiy ko'rsatkichlar
  */
 router.get('/dashboard', asyncHandler(async (req, res) => {

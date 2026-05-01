@@ -3,6 +3,7 @@ const { asyncHandler } = require('../middleware/error.middleware');
 const { AppError } = require('../middleware/error.middleware');
 const { deleteFile } = require('../utils/fileUpload');
 const logger = require('../utils/logger');
+const { notifyAdminNewVendor } = require('../services/notification.service');
 
 /**
  * @desc    Register vendor
@@ -41,6 +42,24 @@ const registerVendor = asyncHandler(async (req, res, next) => {
   });
 
   logger.info(`New vendor registered: ${name}`);
+
+  // Admin'larga Telegram xabar (background)
+  notifyAdminNewVendor(vendor).catch(err =>
+    logger.warn('Admin vendor notify:', err.message)
+  );
+
+  // Socket orqali admin panel'ga real-time bildirishnoma
+  try {
+    const { getIO } = require('../socket');
+    const io = getIO();
+    io.to('admin').emit('vendor:new_registration', {
+      name: vendor.name,
+      category: vendor.category,
+      phone: vendor.phone
+    });
+  } catch (err) {
+    // Socket ishlamasa ham davom etamiz
+  }
 
   res.status(201).json({
     success: true,

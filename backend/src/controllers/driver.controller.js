@@ -3,6 +3,7 @@ const { asyncHandler } = require('../middleware/error.middleware');
 const { AppError } = require('../middleware/error.middleware');
 const { deleteFile } = require('../utils/fileUpload');
 const logger = require('../utils/logger');
+const { notifyAdminNewDriver } = require('../services/notification.service');
 
 /**
  * @desc    Register driver
@@ -46,6 +47,25 @@ const registerDriver = asyncHandler(async (req, res, next) => {
   });
 
   logger.info(`New driver registered: ${firstName} ${lastName}`);
+
+  // Admin'larga Telegram xabar (background)
+  notifyAdminNewDriver(driver).catch(err =>
+    logger.warn('Admin driver notify:', err.message)
+  );
+
+  // Socket orqali admin panel'ga real-time bildirishnoma
+  try {
+    const { getIO } = require('../socket');
+    const io = getIO();
+    io.to('admin').emit('driver:new_registration', {
+      firstName: driver.firstName,
+      lastName: driver.lastName,
+      phone: driver.phone,
+      vehicle: driver.vehicle
+    });
+  } catch (err) {
+    // Socket ishlamasa ham davom etamiz
+  }
 
   res.status(201).json({
     success: true,
