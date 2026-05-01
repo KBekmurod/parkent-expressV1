@@ -38,28 +38,35 @@ export default function CheckoutPage() {
       return;
     }
 
-    const vendorIds = [...new Set(cart.map((item) => item.vendorId).filter(Boolean))];
+    const vendorIds = [...new Set(
+      cart.map((item) => item.vendorId?.toString?.() || item.vendorId).filter(Boolean)
+    )];
+
+    if (vendorIds.length === 0) {
+      toast.error('Mahsulotlarda restoran ma\'lumoti topilmadi. Savatchani tozalab qayta urinib ko\'ring.');
+      return;
+    }
     if (vendorIds.length > 1) {
       toast.error('Bitta restorandan buyurtma bering');
       return;
     }
 
+    const deliveryAddr = {
+      address: selectedAddress.address?.trim() || 'Manzil kiritilmagan',
+      title: selectedAddress.title || 'Manzil',
+      location: selectedAddress.location || { lat: 41.2995, lng: 69.2401 },
+    };
+
     setLoading(true);
     try {
       const orderData = {
         customer: user.id,
-        vendor: vendorIds[0] || cart[0]?.vendorId,
+        vendor: vendorIds[0],
         items: cart.map((item) => ({
           product: item.productId,
-          name: item.name,
-          price: item.price,
           quantity: item.quantity,
         })),
-        deliveryAddress: {
-          address: selectedAddress.address,
-          title: selectedAddress.title || 'Manzil',
-          location: selectedAddress.location || { lat: 41.2995, lng: 69.2401 },
-        },
+        deliveryAddress: deliveryAddr,
         paymentMethod,
         deliveryFee,
         totalAmount: grandTotal,

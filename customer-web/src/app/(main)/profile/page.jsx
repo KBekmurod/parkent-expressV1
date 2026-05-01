@@ -255,10 +255,15 @@ export default function ProfilePage() {
             variant="primary"
             fullWidth
             loading={loading}
-            disabled={!form.title.trim() || (!form.location && !form.address.trim())}
+            disabled={!form.title.trim() || !form.location}
           >
-            Saqlash
+            {!form.location ? '📍 Avval joylashuvni aniqlang' : 'Saqlash'}
           </Button>
+          {!form.location && (
+            <p className="text-xs text-center text-red-400">
+              GPS orqali joylashuvni aniqlash majburiy
+            </p>
+          )}
         </div>
       </Modal>
     </PageWrapper>
