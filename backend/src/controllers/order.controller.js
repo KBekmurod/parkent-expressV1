@@ -60,14 +60,17 @@ const createOrderWithRetry = async (orderData, maxRetries = 3) => {
 const createOrder = asyncHandler(async (req, res, next) => {
   const { customer, vendor, items, deliveryAddress, paymentMethod, customerNote } = req.body;
 
+  // customer ID normalize (string yoki object bo'lishi mumkin)
   const customerId = customer?.$oid || customer?.toString?.() || customer;
   const vendorId = vendor?.$oid || vendor?.toString?.() || vendor;
 
+  // Validate customer
   const customerExists = await User.findById(customerId);
   if (!customerExists) {
     return next(new AppError('Customer not found', 404));
   }
 
+  // Validate vendor
   const vendorExists = await Vendor.findById(vendorId);
   if (!vendorExists) {
     return next(new AppError('Vendor not found', 404));

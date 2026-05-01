@@ -49,23 +49,22 @@ const toggleOnlineStatus = async (bot, chatId, driverId, isOnline) => {
 
     // Handle location tracking
     if (isOnline) {
-      await startLocationTracking(bot, chatId, driverId);
-      await bot.sendMessage(
-        chatId,
-        MESSAGES.uz.nowOnline,
-        {
-          reply_markup: getMainMenuKeyboard(true, 'uz')
+      await bot.sendMessage(chatId, MESSAGES.uz.nowOnline, {
+        reply_markup: getMainMenuKeyboard(true, 'uz')
+      });
+      // Joylashuvni so'rash
+      await bot.sendMessage(chatId, '📍 Joylashuvingizni yuboring:', {
+        reply_markup: {
+          keyboard: [[{ text: '📍 Joylashuvni yuborish', request_location: true }]],
+          resize_keyboard: true,
+          one_time_keyboard: true
         }
-      );
+      });
     } else {
       await stopLocationTracking(bot, chatId, driverId);
-      await bot.sendMessage(
-        chatId,
-        MESSAGES.uz.nowOffline,
-        {
-          reply_markup: getMainMenuKeyboard(false, 'uz')
-        }
-      );
+      await bot.sendMessage(chatId, MESSAGES.uz.nowOffline, {
+        reply_markup: getMainMenuKeyboard(false, 'uz')
+      });
     }
 
     logger.info(`Driver ${driverId} status changed to ${isOnline ? 'online' : 'offline'}`);

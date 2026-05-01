@@ -251,7 +251,8 @@ const handlePhotoMessage = async (bot, msg) => {
 
     // Fayl info
     const fileInfo = await bot.getFile(fileId);
-    const fileUrl = `https://api.telegram.org/file/bot${process.env.CUSTOMER_BOT_TOKEN || process.env.VENDOR_BOT_TOKEN}/${fileInfo.file_path}`;
+    // Bot o'zining tokenini ishlatadi (getFileLink orqali)
+    const fileUrl = await bot.getFileLink(fileId);
 
     await bot.sendMessage(chatId, '⏳ Rasm yuklanmoqda...');
 

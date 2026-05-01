@@ -293,20 +293,6 @@ const getAvailableDrivers = asyncHandler(async (req, res, next) => {
   });
 });
 
-module.exports = {
-  registerDriver,
-  getDriverByTelegramId,
-  getAllDrivers,
-  getDriverById,
-  updateLocation,
-  toggleOnline,
-  uploadDocument,
-  updateDriverStatus,
-  getAvailableDrivers,
-  getDriverEarnings,
-  getDriverStats
-};
-
 /**
  * @desc    Driver daromadini olish (bot uchun)
  * @route   GET /api/v1/drivers/:id/earnings
@@ -384,3 +370,17 @@ const getDriverStats = asyncHandler(async (req, res, next) => {
     }
   });
 });
+
+module.exports = {
+  registerDriver,
+  getDriverByTelegramId,
+  getAllDrivers,
+  getDriverById,
+  updateLocation,
+  toggleOnline,
+  uploadDocument,
+  updateDriverStatus,
+  getAvailableDrivers,
+  getDriverEarnings,
+  getDriverStats
+};

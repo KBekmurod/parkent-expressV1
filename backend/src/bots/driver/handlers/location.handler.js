@@ -64,32 +64,9 @@ const startLocationTracking = async (bot, chatId, driverId) => {
       }
     );
 
-    // Start tracking interval (every 30 seconds)
-    const trackingInterval = setInterval(async () => {
-      try {
-        // Request live location
-        await bot.sendMessage(
-          chatId,
-          MESSAGES.uz.shareLocation,
-          {
-            reply_markup: {
-              keyboard: [
-                [{ text: '📍 Joylashuvni yuborish', request_location: true }]
-              ],
-              resize_keyboard: true,
-              one_time_keyboard: true
-            }
-          }
-        );
-      } catch (error) {
-        logger.error('Error requesting location update:', error);
-      }
-    }, 30000); // 30 seconds
-
-    // Store tracking state
+    // Tracking holatini saqlash
     store.setDriverTracking(driverId, {
       chatId,
-      interval: trackingInterval,
       startTime: Date.now()
     });
 
@@ -112,9 +89,6 @@ const stopLocationTracking = async (bot, chatId, driverId) => {
       return;
     }
 
-    // Clear interval
-    clearInterval(tracking.interval);
-    
     // Remove tracking state
     await store.delDriverTracking(driverId);
 
@@ -131,9 +105,8 @@ const stopLocationTracking = async (bot, chatId, driverId) => {
 const updateDriverLocation = async (driverId, latitude, longitude) => {
   try {
     await axios.put(`${API_URL}/drivers/${driverId}/location`, {
-      latitude,
-      longitude,
-      timestamp: new Date()
+      lat: latitude,
+      lng: longitude
     });
   } catch (error) {
     logger.error('Error updating driver location in DB:', error);

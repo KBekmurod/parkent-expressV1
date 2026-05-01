@@ -1,31 +1,54 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { Download, X } from 'lucide-react';
+import { Download, X, Share } from 'lucide-react';
 
 export default function InstallBanner() {
   const [show, setShow] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState(null);
   const [isIOS, setIsIOS] = useState(false);
-  const [dismissed, setDismissed] = useState(false);
+  const [isAndroid, setIsAndroid] = useState(false);
 
   useEffect(() => {
-    // Allaqachon o'rnatilganmi?
-    if (window.matchMedia('(display-mode: standalone)').matches) return;
-    if (localStorage.getItem('pwa_dismissed')) return;
+    // Allaqachon standalone (o'rnatilgan) rejimda ishlayaptimi?
+    const isStandalone =
+      window.matchMedia('(display-mode: standalone)').matches ||
+      window.navigator.standalone === true;
+    if (isStandalone) return;
 
-    const ios = /iphone|ipad|ipod/.test(window.navigator.userAgent.toLowerCase());
+    // Avval yopilganmi?
+    if (sessionStorage.getItem('pwa_dismissed')) return;
+
+    const ua = window.navigator.userAgent.toLowerCase();
+    const ios = /iphone|ipad|ipod/.test(ua);
+    const android = /android/.test(ua);
     setIsIOS(ios);
+    setIsAndroid(android);
 
-    if (ios) {
-      // iOS'da 2 soniyadan keyin ko'rsatish
-      setTimeout(() => setShow(true), 2000);
-    } else {
-      // Android/Desktop - beforeinstallprompt hodisasini kutish
-      window.addEventListener('beforeinstallprompt', (e) => {
+    if (android) {
+      // Android: beforeinstallprompt ni kutamiz
+      const handler = (e) => {
         e.preventDefault();
         setDeferredPrompt(e);
-        setTimeout(() => setShow(true), 2000);
-      });
+        setTimeout(() => setShow(true), 3000);
+      };
+      window.addEventListener('beforeinstallprompt', handler);
+      // Agar 5 sekunddan keyin event kelmasa ham ko'rsatamiz
+      const fallback = setTimeout(() => setShow(true), 5000);
+      return () => {
+        window.removeEventListener('beforeinstallprompt', handler);
+        clearTimeout(fallback);
+      };
+    } else if (ios) {
+      // iOS: har doim ko'rsatamiz (Safari'da Share -> Add to Home Screen)
+      setTimeout(() => setShow(true), 3000);
+    } else {
+      // Desktop yoki boshqa
+      const handler = (e) => {
+        e.preventDefault();
+        setDeferredPrompt(e);
+        setTimeout(() => setShow(true), 3000);
+      };
+      window.addEventListener('beforeinstallprompt', handler);
     }
   }, []);
 
@@ -33,50 +56,60 @@ export default function InstallBanner() {
     if (deferredPrompt) {
       deferredPrompt.prompt();
       const { outcome } = await deferredPrompt.userChoice;
-      if (outcome === 'accepted') {
-        setShow(false);
-      }
       setDeferredPrompt(null);
+      if (outcome === 'accepted') setShow(false);
     }
   };
 
   const handleDismiss = () => {
     setShow(false);
-    localStorage.setItem('pwa_dismissed', '1');
+    sessionStorage.setItem('pwa_dismissed', '1');
   };
 
   if (!show) return null;
 
   return (
-    <div className="fixed bottom-20 left-4 right-4 z-50 bg-white rounded-2xl shadow-xl border border-orange-100 p-4 animate-slide-up">
+    <div className="fixed bottom-20 left-3 right-3 z-50 bg-white rounded-2xl shadow-2xl border border-orange-100 p-4"
+      style={{ animation: 'slideUp 0.3s ease-out' }}>
+      <style>{`
+        @keyframes slideUp {
+          from { transform: translateY(80px); opacity: 0; }
+          to { transform: translateY(0); opacity: 1; }
+        }
+      `}</style>
+
       <div className="flex items-start gap-3">
         {/* Logo */}
-        <div className="w-12 h-12 rounded-xl bg-orange-500 flex items-center justify-center flex-shrink-0">
+        <div className="w-12 h-12 rounded-xl bg-orange-500 flex items-center justify-center flex-shrink-0 shadow-md">
           <span className="text-white font-bold text-lg">PE</span>
         </div>
 
         <div className="flex-1 min-w-0">
-          <p className="font-bold text-gray-900 text-sm">Parkent Express</p>
-          <p className="text-xs text-gray-500 mt-0.5">Ilovani ekranga qo'shing — tezroq ishlaydi!</p>
+          <p className="font-bold text-gray-900 text-sm">Parkent Express ilovasini yuklab oling</p>
+          <p className="text-xs text-gray-500 mt-0.5">Tezroq ishlaydi, offline ham ko'rish mumkin</p>
 
           {isIOS ? (
-            <div className="mt-2 text-xs text-gray-600 bg-gray-50 rounded-lg p-2">
-              <p className="font-medium mb-1">iOS'da o'rnatish:</p>
-              <p>1. Pastdagi <strong>↑ Share</strong> tugmasini bosing</p>
-              <p>2. <strong>"Add to Home Screen"</strong> ni tanlang</p>
+            <div className="mt-2 bg-orange-50 rounded-xl p-2.5 text-xs text-orange-800">
+              <p className="font-semibold mb-1 flex items-center gap-1">
+                <Share size={11} /> Safari orqali qo'shing:
+              </p>
+              <p>1. Pastdagi <strong>↑ Ulashish</strong> tugmasini bosing</p>
+              <p>2. <strong>"Bosh ekranga qo'shish"</strong> ni tanlang</p>
+              <p>3. <strong>Qo'shish</strong> ni bosing ✅</p>
             </div>
           ) : (
             <button
               onClick={handleInstall}
-              className="mt-2 flex items-center gap-1.5 bg-orange-500 text-white text-xs font-medium px-3 py-1.5 rounded-lg hover:bg-orange-600 active:bg-orange-700"
+              className="mt-2 flex items-center gap-1.5 bg-orange-500 text-white text-xs font-semibold px-4 py-2 rounded-xl hover:bg-orange-600 active:scale-95 transition-all"
             >
-              <Download size={12} />
-              Yuklab olish
+              <Download size={13} />
+              Yuklab olish (bepul)
             </button>
           )}
         </div>
 
-        <button onClick={handleDismiss} className="text-gray-400 hover:text-gray-600 flex-shrink-0">
+        <button onClick={handleDismiss}
+          className="text-gray-300 hover:text-gray-500 flex-shrink-0 p-1">
           <X size={18} />
         </button>
       </div>

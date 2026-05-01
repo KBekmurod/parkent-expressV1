@@ -69,7 +69,8 @@ export default function ProfilePage() {
         location: form.location || { lat: 41.2995, lng: 69.2401 },
       };
       const data = await addAddress(user.id, addressData);
-      updateUserData({ addresses: data.data?.addresses || data.addresses });
+      const addresses = data.data?.user?.addresses || data.data?.addresses || data.addresses || [];
+      updateUserData({ addresses });
       toast.success('Manzil qo\'shildi!');
       setShowAddressModal(false);
       setForm({ title: '', address: '', location: null });
@@ -83,7 +84,8 @@ export default function ProfilePage() {
   const handleDeleteAddress = async (index) => {
     try {
       const data = await deleteAddress(user.id, index);
-      updateUserData({ addresses: data.data?.addresses || data.addresses });
+      const addresses = data.data?.user?.addresses || data.data?.addresses || data.addresses || [];
+      updateUserData({ addresses });
       toast.success('Manzil o\'chirildi');
     } catch {
       toast.error('O\'chirishda xatolik');
