@@ -9,6 +9,10 @@ export const vendorService = {
     return await api.get(`/vendors/${id}`)
   },
 
+  createVendor: async (data) => {
+    return await api.post('/vendors/register', data)
+  },
+
   updateVendor: async (id, data) => {
     return await api.put(`/vendors/${id}`, data)
   },

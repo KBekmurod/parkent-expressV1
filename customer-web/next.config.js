@@ -1,28 +1,17 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: 'standalone',
+  basePath: '/web',
   images: {
     remotePatterns: [
-      {
-        protocol: 'http',
-        hostname: 'localhost',
-        port: '5000',
-        pathname: '/uploads/**',
-      },
-      {
-        protocol: 'https',
-        hostname: '**',
-      },
+      { protocol: 'https', hostname: '**' },
+      { protocol: 'http', hostname: 'localhost', port: '5000', pathname: '/uploads/**' },
     ],
   },
   async rewrites() {
     return [
-      {
-        source: '/',
-        destination: '/home',
-      },
-    ];
+      { source: '/', destination: '/home' },
+    ]
   },
-};
+}
 
-module.exports = nextConfig;
+module.exports = nextConfig
