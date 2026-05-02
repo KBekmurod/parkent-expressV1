@@ -80,8 +80,8 @@ export default function InstallBanner() {
 
       <div className="flex items-start gap-3">
         {/* Logo */}
-        <div className="w-12 h-12 rounded-xl bg-orange-500 flex items-center justify-center flex-shrink-0 shadow-md">
-          <span className="text-white font-bold text-lg">PE</span>
+        <div className="w-12 h-12 rounded-xl overflow-hidden flex-shrink-0 shadow-md">
+          <img src="/web/icons/icon-192.png" alt="Parkent Express" className="w-full h-full object-cover" />
         </div>
 
         <div className="flex-1 min-w-0">
