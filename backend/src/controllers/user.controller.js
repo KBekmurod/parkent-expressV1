@@ -293,6 +293,7 @@ const deleteUser = asyncHandler(async (req, res, next) => {
 
 module.exports = {
   registerUser,
+  updatePhone,
   getUserByTelegramId,
   updateUserByTelegramId,
   getAllUsers,
@@ -303,3 +304,21 @@ module.exports = {
   updateUserStatus,
   deleteUser
 };
+
+const updatePhone = asyncHandler(async (req, res, next) => {
+  const { phone } = req.body;
+  if (!phone) return next(new AppError('Telefon raqam kiritilmadi', 400));
+
+  const user = await User.findById(req.params.id);
+  if (!user) return next(new AppError('Foydalanuvchi topilmadi', 404));
+
+  // Eski raqamni tarixga saqlash
+  if (user.phone && user.phone !== phone) {
+    user.phoneHistory = user.phoneHistory || [];
+    user.phoneHistory.push({ phone: user.phone, changedAt: new Date() });
+  }
+  user.phone = phone;
+  await user.save();
+
+  res.json({ success: true, message: 'Telefon raqam yangilandi', data: { user } });
+});

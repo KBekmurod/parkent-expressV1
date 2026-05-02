@@ -70,7 +70,11 @@ const userSchema = new mongoose.Schema({
     type: String,
     enum: ['telegram', 'web'],
     default: 'telegram'
-  }
+  },
+  phoneHistory: [{
+    phone: String,
+    changedAt: { type: Date, default: Date.now }
+  }]
 }, {
   timestamps: true
 });

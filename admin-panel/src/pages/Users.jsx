@@ -89,9 +89,16 @@ const Users = () => {
     {
       key: 'phone', label: 'Telefon',
       render: row => (
-        <div className="flex items-center gap-1 text-sm text-gray-600">
-          <Phone size={13} />
-          {row.phone || '—'}
+        <div>
+          <div className="flex items-center gap-1 text-sm text-gray-600">
+            <Phone size={13} />
+            {row.phone || '—'}
+          </div>
+          {row.phoneHistory?.length > 0 && (
+            <div className="text-xs text-gray-400 mt-0.5">
+              Avvalgi: {row.phoneHistory[row.phoneHistory.length-1]?.phone}
+            </div>
+          )}
         </div>
       )
     },

@@ -21,10 +21,10 @@ router.get('/vendor/:vendorId', validateObjectId('vendorId'), getProductsByVendo
 router.get('/:id', validateObjectId('id'), getProductById);
 
 // Vendor/Admin routes
-router.post('/', protect, validate(productSchemas.create), createProduct);
-router.post('/:id/photo', protect, validateObjectId('id'), uploadSingle('photo'), uploadPhoto);
+router.post('/', validate(productSchemas.create), createProduct); // Bot ham ishlatadi
+router.post('/:id/photo', validateObjectId('id'), uploadSingle('photo'), uploadPhoto); // Bot ham ishlatadi
 router.put('/:id', protect, validateObjectId('id'), validate(productSchemas.update), updateProduct);
-router.put('/:id/toggle', protect, validateObjectId('id'), toggleAvailability);
+router.put('/:id/toggle', validateObjectId('id'), toggleAvailability); // Bot ham ishlatadi
 router.delete('/:id', protect, validateObjectId('id'), deleteProduct);
 
 module.exports = router;

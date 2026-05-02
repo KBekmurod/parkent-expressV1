@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const {
   registerUser,
+  updatePhone,
   getUserByTelegramId,
   updateUserByTelegramId,
   getAllUsers,
@@ -29,5 +30,6 @@ router.get('/', protect, adminAuth, getAllUsers);
 router.get('/:id', protect, adminAuth, validateObjectId('id'), getUserById);
 router.put('/:id/status', protect, adminAuth, validateObjectId('id'), updateUserStatus);
 router.delete('/:id', protect, adminAuth, validateObjectId('id'), deleteUser);
+router.put('/:id/phone', validateObjectId('id'), updatePhone); // Telefon yangilash (public - web user)
 
 module.exports = router;

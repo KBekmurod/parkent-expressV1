@@ -1,6 +1,6 @@
 {
   "name": "Parkent Express",
-  "short_name": "Parkent",
+  "short_name": "Parkent Express",
   "description": "Tez va qulay ovqat yetkazib berish xizmati",
   "start_url": "/web/home",
   "scope": "/web/",
@@ -24,5 +24,8 @@
     }
   ],
   "screenshots": [],
-  "categories": ["food", "shopping"]
+  "categories": [
+    "food",
+    "shopping"
+  ]
 }

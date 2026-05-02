@@ -10,6 +10,11 @@ export const addAddress = async (userId, addressData) => {
   return response.data;
 };
 
+export const updatePhone = async (userId, phone) => {
+  const response = await api.put(`/users/${userId}/phone`, { phone });
+  return response.data;
+};
+
 export const deleteAddress = async (userId, addressIndex) => {
   const response = await api.delete(`/users/${userId}/addresses/${addressIndex}`);
   return response.data;

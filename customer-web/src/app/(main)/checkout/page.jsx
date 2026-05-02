@@ -81,7 +81,11 @@ export default function CheckoutPage() {
 
       // Karta to'lov - Telegram deep link
       if (paymentMethod === 'card_to_driver' && orderId) {
-        const itemsList = cart.map(i => `${i.name} x${i.quantity}`).join(', ');
+        const itemsList = cart.map(i => {
+          const n = i.name;
+          const name = typeof n === 'object' ? (n?.uz || n?.ru || 'Mahsulot') : (n || 'Mahsulot');
+          return `${name} x${i.quantity}`;
+        }).join(', ');
         const text = encodeURIComponent(
           `Salom! Buyurtma #${orderId} uchun karta orqali to'lov qilmoqchiman.\n` +
           `Mahsulotlar: ${itemsList}\n` +
