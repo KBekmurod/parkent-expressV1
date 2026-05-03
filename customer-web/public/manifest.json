@@ -1,15 +1,20 @@
 {
   "name": "Parkent Express",
   "short_name": "Parkent Express",
-  "description": "Tez va qulay ovqat yetkazib berish xizmati",
+  "description": "Tez va qulay taom yetkazib berish xizmati",
   "start_url": "/web/home",
   "scope": "/web/",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#FF6B35",
-  "theme_color": "#FF6B35",
+  "background_color": "#E62B00",
+  "theme_color": "#E62B00",
   "lang": "uz",
   "icons": [
+    {
+      "src": "/web/icons/favicon-32x32.png",
+      "sizes": "32x32",
+      "type": "image/png"
+    },
     {
       "src": "/web/icons/icon-192.png",
       "sizes": "192x192",
@@ -23,9 +28,5 @@
       "purpose": "any maskable"
     }
   ],
-  "screenshots": [],
-  "categories": [
-    "food",
-    "shopping"
-  ]
+  "categories": ["food", "shopping"]
 }

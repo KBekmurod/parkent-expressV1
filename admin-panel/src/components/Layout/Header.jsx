@@ -12,24 +12,30 @@ const Header = () => {
   }
 
   return (
-    <header className="bg-white shadow-sm px-6 py-4">
-      <div className="flex items-center justify-between">
-        <h2 className="text-xl font-semibold text-gray-800">Welcome back!</h2>
-        
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
-            <User size={20} className="text-gray-600" />
-            <span className="text-sm text-gray-600">{user?.email || 'Admin'}</span>
-          </div>
-          
-          <button
-            onClick={handleLogout}
-            className="flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+    <header className="bg-white px-6 py-3.5 flex items-center justify-between"
+      style={{ borderBottom: '1px solid rgba(0,0,0,0.06)', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
+      <h2 className="text-base font-semibold" style={{ color: '#0C1E3E' }}>
+        Xush kelibsiz! 👋
+      </h2>
+
+      <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gray-50">
+          <div
+            className="w-6 h-6 rounded-full flex items-center justify-center"
+            style={{ background: 'linear-gradient(135deg, #E62B00, #FF8C00)' }}
           >
-            <LogOut size={18} />
-            <span>Logout</span>
-          </button>
+            <User size={13} className="text-white" />
+          </div>
+          <span className="text-sm font-medium" style={{ color: '#0C1E3E' }}>{user?.email || 'Admin'}</span>
         </div>
+
+        <button
+          onClick={handleLogout}
+          className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg transition-colors text-gray-500 hover:bg-red-50 hover:text-red-600"
+        >
+          <LogOut size={16} />
+          <span>Chiqish</span>
+        </button>
       </div>
     </header>
   )

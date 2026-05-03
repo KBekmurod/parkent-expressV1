@@ -8,17 +8,32 @@ export default {
     extend: {
       colors: {
         primary: {
-          50: '#eff6ff',
-          100: '#dbeafe',
-          200: '#bfdbfe',
-          300: '#93c5fd',
-          400: '#60a5fa',
-          500: '#3b82f6',
-          600: '#2563eb',
-          700: '#1d4ed8',
-          800: '#1e40af',
-          900: '#1e3a8a',
+          50:  '#fff3ed',
+          100: '#ffe4cc',
+          200: '#ffc499',
+          300: '#ff9a5c',
+          400: '#ff6a1a',
+          500: '#E62B00',
+          600: '#cc2500',
+          700: '#a81d00',
+          800: '#861800',
+          900: '#6b1300',
         },
+        navy: {
+          DEFAULT: '#0C1E3E',
+          light:   '#1a3460',
+          dark:    '#060f1f',
+        },
+        brand: {
+          start: '#E62B00',
+          end:   '#FF8C00',
+        },
+      },
+      backgroundImage: {
+        'brand-gradient': 'linear-gradient(135deg, #E62B00 0%, #FF8C00 100%)',
+      },
+      boxShadow: {
+        'brand': '0 4px 14px rgba(230,43,0,0.32)',
       },
     },
   },

@@ -56,29 +56,49 @@ const Sidebar = () => {
 
   return (
     <div className="w-64 bg-white shadow-lg flex flex-col">
-      <div className="p-6 border-b">
-        <h1 className="text-2xl font-bold text-primary-600">Parkent Express</h1>
-        <p className="text-sm text-gray-500">Admin Panel</p>
+      {/* Logo header */}
+      <div className="px-5 py-5 border-b border-gray-100">
+        <div className="flex items-center gap-3">
+          <div
+            className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+            style={{ background: 'linear-gradient(135deg, #E62B00 0%, #FF8C00 100%)' }}
+          >
+            <img src="/icons/logo-white.svg" alt="PE" className="w-7 h-7 object-contain" />
+          </div>
+          <div className="flex flex-col leading-none">
+            <span className="font-black text-sm" style={{ color: '#0C1E3E', letterSpacing: '0.07em' }}>
+              PARKENT
+            </span>
+            <span className="font-black text-sm" style={{ color: '#E62B00', letterSpacing: '0.07em' }}>
+              EXPRESS
+            </span>
+            <span className="text-xs text-gray-400 font-normal mt-0.5">Admin Panel</span>
+          </div>
+        </div>
       </div>
 
-      <nav className="p-4 flex-1 overflow-y-auto">
+      <nav className="p-3 flex-1 overflow-y-auto">
         {menuItems.map((item) => (
           <NavLink
             key={item.path}
             to={item.path}
             onClick={() => clearBadge(item.path)}
             className={({ isActive }) =>
-              `flex items-center gap-3 px-4 py-3 rounded-lg mb-1 transition-colors ${
+              `flex items-center gap-3 px-4 py-2.5 rounded-xl mb-0.5 transition-all text-sm ${
                 isActive
-                  ? 'bg-primary-50 text-primary-600 font-medium'
-                  : 'text-gray-600 hover:bg-gray-50'
+                  ? 'font-semibold text-white'
+                  : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
               }`
             }
+            style={({ isActive }) => isActive ? {
+              background: 'linear-gradient(135deg, #E62B00 0%, #FF8C00 100%)',
+              boxShadow: '0 3px 10px rgba(230,43,0,0.28)',
+            } : {}}
           >
-            <item.icon size={20} />
+            <item.icon size={18} />
             <span className="flex-1">{item.label}</span>
             {item.badge > 0 && (
-              <span className="bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
+              <span className="bg-white text-red-600 text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
                 {item.badge > 9 ? '9+' : item.badge}
               </span>
             )}

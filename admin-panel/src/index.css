@@ -14,22 +14,37 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background-color: #F5F7FA;
 }
 
 @layer components {
   .btn-primary {
-    @apply bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors;
+    @apply text-white px-4 py-2 rounded-lg transition-all active:scale-95;
+    background: linear-gradient(135deg, #E62B00 0%, #FF8C00 100%);
+    box-shadow: 0 4px 14px rgba(230,43,0,0.28);
   }
-  
+  .btn-primary:hover { opacity: 0.92; }
+
   .btn-secondary {
-    @apply bg-gray-200 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-300 transition-colors;
+    @apply bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors;
   }
-  
+
   .card {
-    @apply bg-white rounded-lg shadow-md p-6;
+    @apply bg-white rounded-xl shadow-sm p-6;
+    border: 1px solid rgba(0,0,0,0.06);
   }
-  
+
   .input {
-    @apply w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500;
+    @apply w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none transition-all;
+    focus-ring: 2px solid #E62B00;
+  }
+  .input:focus {
+    border-color: #E62B00;
+    box-shadow: 0 0 0 3px rgba(230,43,0,0.12);
+  }
+
+  .badge-brand {
+    background: linear-gradient(135deg, #E62B00, #FF8C00);
+    @apply text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold;
   }
 }

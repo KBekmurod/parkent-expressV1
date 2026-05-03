@@ -6,7 +6,6 @@ import Button from '../../../components/ui/Button';
 import Input from '../../../components/ui/Input';
 import { validatePhone, validatePin } from '../../../utils/validators';
 import toast from 'react-hot-toast';
-import { APP_NAME } from '../../../utils/constants';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -54,22 +53,38 @@ export default function LoginPage() {
 
   return (
     <div className="bg-white rounded-3xl shadow-xl p-8">
-      <div className="text-center mb-8">
-        <div className="text-5xl mb-3">🍕</div>
-        <h1 className="text-2xl font-bold text-gray-900">{APP_NAME}</h1>
-        <p className="text-gray-500 mt-1">Tez va qulay yetkazib berish</p>
+      {/* Logo */}
+      <div className="flex flex-col items-center mb-8 gap-3">
+        <img
+          src="/icons/logo.svg"
+          alt="Parkent Express"
+          className="h-20 w-auto object-contain"
+        />
+        <div className="text-center">
+          <h1 className="text-xl font-black tracking-wide" style={{ color: '#0C1E3E' }}>
+            PARKENT EXPRESS
+          </h1>
+          <p className="text-sm mt-0.5" style={{ color: '#A0AEC0', fontStyle: 'italic' }}>
+            Tez va qulay yetkazib berish
+          </p>
+        </div>
       </div>
 
+      {/* Mode toggle */}
       <div className="flex bg-gray-100 rounded-xl p-1 mb-6">
         <button
           onClick={() => setMode('login')}
-          className={`flex-1 py-2 rounded-lg text-sm font-medium transition-colors ${mode === 'login' ? 'bg-white shadow text-gray-900' : 'text-gray-500'}`}
+          className={`flex-1 py-2 rounded-lg text-sm font-medium transition-colors ${
+            mode === 'login' ? 'bg-white shadow text-gray-900' : 'text-gray-400'
+          }`}
         >
           Kirish
         </button>
         <button
           onClick={() => setMode('register')}
-          className={`flex-1 py-2 rounded-lg text-sm font-medium transition-colors ${mode === 'register' ? 'bg-white shadow text-gray-900' : 'text-gray-500'}`}
+          className={`flex-1 py-2 rounded-lg text-sm font-medium transition-colors ${
+            mode === 'register' ? 'bg-white shadow text-gray-900' : 'text-gray-400'
+          }`}
         >
           Ro'yxatdan o'tish
         </button>
@@ -82,27 +97,10 @@ export default function LoginPage() {
             <Input label="Familiya" name="lastName" placeholder="Familiyangiz" value={form.lastName} onChange={handleChange} />
           </div>
         )}
-        <Input
-          label="Telefon raqam"
-          name="phone"
-          type="tel"
-          placeholder="+998901234567"
-          value={form.phone}
-          onChange={handleChange}
-          error={errors.phone}
-          required
-        />
-        <Input
-          label="PIN (4 ta raqam)"
-          name="pin"
-          type="password"
-          placeholder="****"
-          value={form.pin}
-          onChange={handleChange}
-          error={errors.pin}
-          maxLength={4}
-          required
-        />
+        <Input label="Telefon raqam" name="phone" type="tel" placeholder="+998901234567"
+          value={form.phone} onChange={handleChange} error={errors.phone} required />
+        <Input label="PIN (4 ta raqam)" name="pin" type="password" placeholder="****"
+          value={form.pin} onChange={handleChange} error={errors.pin} maxLength={4} required />
         <Button type="submit" variant="primary" fullWidth loading={loading} size="lg">
           {mode === 'login' ? 'Kirish' : "Ro'yxatdan o'tish"}
         </Button>

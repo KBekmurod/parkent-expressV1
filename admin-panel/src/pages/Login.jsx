@@ -26,41 +26,71 @@ const Login = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="card max-w-md w-full">
-        <h2 className="text-3xl font-bold text-center mb-6">Admin Login</h2>
-        
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium mb-2">Email</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="input"
-              required
-            />
+    <div className="min-h-screen flex items-center justify-center"
+      style={{ background: 'linear-gradient(160deg, #E62B00 0%, #FF8C00 100%)' }}>
+
+      {/* Splash fon logo */}
+      <div className="absolute inset-0 flex items-center justify-center opacity-5 pointer-events-none">
+        <img src="/icons/logo-white.svg" alt="" className="w-96 h-96 object-contain" />
+      </div>
+
+      <div className="relative w-full max-w-sm mx-4">
+        {/* Logo blok */}
+        <div className="flex flex-col items-center mb-8 gap-3">
+          <div className="w-20 h-20 rounded-3xl bg-white/20 backdrop-blur flex items-center justify-center shadow-xl">
+            <img src="/icons/logo-white.svg" alt="Parkent Express" className="w-14 h-14 object-contain" />
           </div>
-          
-          <div>
-            <label className="block text-sm font-medium mb-2">Password</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="input"
-              required
-            />
+          <div className="text-center">
+            <h1 className="text-white font-black text-2xl tracking-widest leading-tight">PARKENT</h1>
+            <h1 className="text-white/90 font-black text-2xl tracking-widest leading-tight">EXPRESS</h1>
+            <p className="text-white/60 text-sm mt-1 italic">Admin Panel</p>
           </div>
-          
-          <button
-            type="submit"
-            disabled={loading}
-            className="btn-primary w-full"
-          >
-            {loading ? 'Loading...' : 'Login'}
-          </button>
-        </form>
+        </div>
+
+        {/* Form card */}
+        <div className="bg-white rounded-3xl shadow-2xl p-8">
+          <h2 className="text-xl font-bold mb-6 text-center" style={{ color: '#0C1E3E' }}>
+            Tizimga kirish
+          </h2>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium mb-1.5" style={{ color: '#0C1E3E' }}>
+                Email
+              </label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="input"
+                placeholder="admin@parkentexpress.uz"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-1.5" style={{ color: '#0C1E3E' }}>
+                Parol
+              </label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="input"
+                placeholder="••••••••"
+                required
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="btn-primary w-full mt-2 py-3 rounded-xl font-bold text-base"
+            >
+              {loading ? 'Yuklanmoqda...' : 'Kirish'}
+            </button>
+          </form>
+        </div>
       </div>
     </div>
   )

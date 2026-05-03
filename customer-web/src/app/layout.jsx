@@ -6,7 +6,7 @@ import InstallBanner from '../components/ui/InstallBanner';
 
 export const metadata = {
   title: 'Parkent Express',
-  description: 'Tez va qulay ovqat yetkazib berish xizmati',
+  description: 'Tez va qulay taom yetkazib berish xizmati',
   manifest: '/web/manifest.json',
   appleWebApp: {
     capable: true,
@@ -15,8 +15,12 @@ export const metadata = {
   },
   formatDetection: { telephone: false },
   icons: {
-    icon: '/web/icons/icon-192.png',
-    apple: '/web/icons/icon-192.png',
+    icon: [
+      { url: '/web/icons/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
+      { url: '/web/icons/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
+      { url: '/web/icons/icon-192.png',      sizes: '192x192', type: 'image/png' },
+    ],
+    apple: '/web/icons/apple-touch-icon.png',
   },
 };
 
@@ -24,7 +28,7 @@ export const viewport = {
   width: 'device-width',
   initialScale: 1,
   maximumScale: 1,
-  themeColor: '#FF6B35',
+  themeColor: '#E62B00',
 };
 
 export default function RootLayout({ children }) {
@@ -32,12 +36,15 @@ export default function RootLayout({ children }) {
     <html lang="uz">
       <head>
         <link rel="manifest" href="/web/manifest.json" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/web/icons/favicon-32x32.png" />
+        <link rel="icon" type="image/png" sizes="16x16" href="/web/icons/favicon-16x16.png" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/web/icons/apple-touch-icon.png" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="apple-mobile-web-app-title" content="Parkent Express" />
-        <link rel="apple-touch-icon" href="/web/icons/icon-192.png" />
+        <meta name="theme-color" content="#E62B00" />
       </head>
-      <body>
+      <body className="bg-surface">
         <AuthProvider>
           <CartProvider>
             {children}
