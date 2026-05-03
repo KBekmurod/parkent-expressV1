@@ -40,29 +40,27 @@ const initCustomerBot = () => {
       );
     });
 
-    // Ilovani o'rnatish tugmasi
+    // "Ilovani o'rnatish" tugmasi
     customerBot.on('message', async (msg) => {
       if (msg.text?.startsWith('/start')) return;
       const chatId = msg.chat.id;
 
       if (msg.text === '📲 Ilovani telefonga o\'rnatish') {
         await customerBot.sendMessage(chatId,
-          `📲 *Parkent Express ilovasini o'rnatish*\n\n` +
-          `Telegram ichida ilovani o'rnatib bo'lmaydi.\n\n` +
-          `*Qanday o'rnatiladi?*\n\n` +
-          `*Android uchun:*\n` +
-          `1. Quyidagi havolani Chrome da oching\n` +
-          `2. Yuqori o'ngdagi ⋮ menyusini bosing\n` +
-          `3. "Bosh ekranga qo'shish" ni tanlang ✅\n\n` +
-          `*iPhone uchun:*\n` +
-          `1. Havolani Safari da oching\n` +
-          `2. Pastdagi ↑ tugmasini bosing\n` +
-          `3. "Bosh ekranga qo'shish" ni tanlang ✅`,
+          `📲 *Parkent Express — ilovani o'rnatish*\n\n` +
+          `Telegram ichida to'g'ridan-to'g'ri o'rnatib bo'lmaydi.\n\n` +
+          `✅ *Quyidagi havolani bosing* — u avtomatik ravishda *Chrome* yoki *Safari* da ochiladi va ilova o'rnatish taklif qilinadi.\n\n` +
+          `📌 *Android:* havola ochilgach, yuqori o'ngdagi ⋮ → *"Bosh ekranga qo'shish"*\n` +
+          `📌 *iPhone:* havola ochilgach, pastdagi ↑ → *"Bosh ekranga qo'shish"*`,
           {
             parse_mode: 'Markdown',
             reply_markup: {
               inline_keyboard: [[
-                { text: '🌐 Havolani ochish', url: WEB_APP_URL }
+                {
+                  // url tugmasi — Telegram uni tashqi browserda ochadi (WebView emas)
+                  text: '⬇️ Ilovani yuklab olish',
+                  url: WEB_APP_URL
+                }
               ]]
             }
           }
@@ -83,7 +81,7 @@ const initCustomerBot = () => {
       logger.error('Customer Bot polling error:', error.message);
     });
 
-    logger.info('✅ Customer Bot initialized (web-only mode)');
+    logger.info('✅ Customer Bot initialized');
     return customerBot;
   } catch (error) {
     logger.error('❌ Customer Bot initialization failed:', error);

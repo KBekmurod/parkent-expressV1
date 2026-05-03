@@ -265,8 +265,8 @@ const webRegister = asyncHandler(async (req, res, next) => {
     return next(new AppError('Telefon raqam va PIN kiritish majburiy', 400));
   }
 
-  if (!/^\d{4}$/.test(pin)) {
-    return next(new AppError('PIN 4 xonali raqam bo\'lishi kerak', 400));
+  if (!/^\d{6}$/.test(pin)) {
+    return next(new AppError('PIN 6 xonali raqam bo\'lishi kerak', 400));
   }
 
   // Mavjudligini tekshirish (webPhone maydoni bo'yicha)
@@ -320,8 +320,8 @@ const webLogin = asyncHandler(async (req, res, next) => {
     return next(new AppError('Telefon raqam va PIN kiritish majburiy', 400));
   }
 
-  if (!/^\d{4}$/.test(pin)) {
-    return next(new AppError('PIN 4 xonali raqam bo\'lishi kerak', 400));
+  if (!/^\d{6}$/.test(pin)) {
+    return next(new AppError('PIN 6 xonali raqam bo\'lishi kerak', 400));
   }
 
   // webPhone maydoni bo'yicha web foydalanuvchini topish

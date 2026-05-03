@@ -4,7 +4,7 @@ export const validatePhone = (phone) => {
 };
 
 export const validatePin = (pin) => {
-  return /^\d{4}$/.test(pin);
+  return /^\d{6}$/.test(pin);
 };
 
 export const validateName = (name) => {
