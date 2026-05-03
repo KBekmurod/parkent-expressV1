@@ -12,27 +12,14 @@ export default function Navbar() {
     <nav className="sticky top-0 z-40 bg-white border-b border-gray-100 shadow-sm">
       <div className="max-w-2xl mx-auto px-4 h-14 flex items-center justify-between">
 
-        {/* Logo — color PNG, transparent bg */}
-        <Link href="/home" className="flex items-center gap-2 px-1 py-1">
+        {/* Logo — logo-full.svg (icon + nom birga) */}
+        <Link href="/home" className="flex items-center py-1">
           <img
-            src="/icons/logo.svg"
+            src="/icons/logo-full.svg"
             alt="Parkent Express"
-            className="h-9 w-auto object-contain"
+            className="h-10 w-auto object-contain"
+            style={{ maxWidth: '160px' }}
           />
-          <div className="flex flex-col leading-none gap-px">
-            <span
-              className="font-black tracking-widest"
-              style={{ color: '#0C1E3E', fontSize: '0.78rem', letterSpacing: '0.09em' }}
-            >
-              PARKENT
-            </span>
-            <span
-              className="font-black tracking-widest"
-              style={{ color: '#E62B00', fontSize: '0.78rem', letterSpacing: '0.09em' }}
-            >
-              EXPRESS
-            </span>
-          </div>
         </Link>
 
         {/* O'ng: savatcha + profil */}
