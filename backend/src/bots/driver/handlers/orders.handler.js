@@ -189,8 +189,16 @@ const handleOrderCallback = async (bot, callbackQuery) => {
  */
 const acceptOrder = async (bot, chatId, messageId, orderId, driverId) => {
   try {
+    // Avval buyurtmani tekshirib olamiz
+    const orderCheck = await axios.get(`${API_URL}/orders/${orderId}`);
+    const currentStatus = orderCheck.data.data.order.status;
+
+    // ready bo'lsa assigned ga o'tkazamiz (driver qabul qildi)
+    // assigned bo'lsa picked_up ga o'tkazamiz (driver oldi)
+    const nextStatus = currentStatus === 'ready' ? 'assigned' : 'picked_up';
+
     await axios.put(`${API_URL}/orders/${orderId}/status`, {
-      status: 'picked_up',
+      status: nextStatus,
       driverId
     });
 

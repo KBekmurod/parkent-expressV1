@@ -310,7 +310,10 @@ const getOrdersByVendor = asyncHandler(async (req, res, next) => {
   const { status } = req.query;
 
   const query = { vendor: req.params.vendorId };
-  if (status) query.status = status;
+  if (status) {
+    const statusList = status.split(',').map(s => s.trim()).filter(Boolean);
+    query.status = statusList.length === 1 ? statusList[0] : { $in: statusList };
+  }
 
   const orders = await Order.find(query)
     .populate('customer', 'firstName lastName phone')
@@ -334,7 +337,11 @@ const getOrdersByDriver = asyncHandler(async (req, res, next) => {
   const { status } = req.query;
 
   const query = { driver: req.params.driverId };
-  if (status) query.status = status;
+  if (status) {
+    // Vergul bilan kelgan statuslarni array ga o'girish: 'ready,picked_up' → ['ready','picked_up']
+    const statusList = status.split(',').map(s => s.trim()).filter(Boolean);
+    query.status = statusList.length === 1 ? statusList[0] : { $in: statusList };
+  }
 
   const orders = await Order.find(query)
     .populate('customer', 'firstName lastName phone')
@@ -355,7 +362,7 @@ const getOrdersByDriver = asyncHandler(async (req, res, next) => {
  * @access  Private (Vendor/Driver/Admin)
  */
 const updateOrderStatus = asyncHandler(async (req, res, next) => {
-  const { status, note } = req.body;
+  const { status, note, driverId } = req.body;
 
   const order = await Order.findById(req.params.id);
 
@@ -395,6 +402,11 @@ const updateOrderStatus = asyncHandler(async (req, res, next) => {
   }
 
   order.status = status;
+
+  // Agar driverId berilgan bo'lsa va driver biriktirilmagan bo'lsa — biriktirish
+  if (driverId && !order.driver) {
+    order.driver = driverId;
+  }
   await order.save();
 
   // Buyurtma "ready" bo'lganda avtomatik haydovchi biriktirish

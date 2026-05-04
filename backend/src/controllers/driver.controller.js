@@ -192,15 +192,20 @@ const toggleOnline = asyncHandler(async (req, res, next) => {
     return next(new AppError('Hisob faol emas', 403));
   }
 
+  // req.body.isOnline berilgan bo'lsa — uni ishlatamiz, aks holda toggle qilamiz
+  const targetOnline = typeof req.body.isOnline === 'boolean'
+    ? req.body.isOnline
+    : !driver.isOnline;
+
   // Agar haydovchi offline bo'lmoqchi bo'lsa va faol buyurtmalari bo'lsa — taqiqlash
-  if (driver.isOnline && driver.currentOrders && driver.currentOrders.length > 0) {
+  if (!targetOnline && driver.currentOrders && driver.currentOrders.length > 0) {
     return next(new AppError(
       `Sizda ${driver.currentOrders.length} ta faol buyurtma bor. Avval ularni yetkazib bering.`,
       400
     ));
   }
 
-  driver.isOnline = !driver.isOnline;
+  driver.isOnline = targetOnline;
   await driver.save();
 
   logger.info(`Haydovchi ${driver.isOnline ? 'online' : 'offline'}: ${driver.firstName}`);
